@@ -1,0 +1,8 @@
+{
+  "source": "Belief-R strong paired subset",
+  "paired_examples": 1282,
+  "full_info": 1282,
+  "incremental_no_overturn": 264,
+  "incremental_overturn_reasoning": 1018,
+  "skipped_unpaired": 462
+}

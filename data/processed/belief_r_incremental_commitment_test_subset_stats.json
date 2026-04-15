@@ -1,0 +1,9 @@
+{
+  "source_split": "test",
+  "subset_examples": 260,
+  "condition_counts": {
+    "full_info": 130,
+    "incremental_no_overturn": 27,
+    "incremental_overturn_reasoning": 103
+  }
+}

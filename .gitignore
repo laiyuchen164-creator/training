@@ -43,3 +43,13 @@ data/processed/
 
 # Keep data conversion scripts tracked
 !data/*.py
+!data/processed/
+data/processed/*
+!data/processed/belief_r_incremental.jsonl
+!data/processed/belief_r_incremental_stats.json
+!data/processed/belief_r_commitment_control_train.jsonl
+!data/processed/belief_r_commitment_control_dev.jsonl
+!data/processed/belief_r_commitment_control_test.jsonl
+!data/processed/belief_r_commitment_control_stats.json
+!data/processed/belief_r_incremental_commitment_test_subset.jsonl
+!data/processed/belief_r_incremental_commitment_test_subset_stats.json

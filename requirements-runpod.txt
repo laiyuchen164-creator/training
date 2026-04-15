@@ -1,0 +1,8 @@
+numpy>=2.4
+pyyaml>=6.0
+transformers>=5.5
+peft>=0.19
+accelerate>=1.13
+datasets>=4.8
+sentencepiece>=0.2
+safetensors>=0.4

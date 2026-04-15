@@ -87,6 +87,40 @@ python training/train_commitment_control_hf.py --config configs/train_cipc_belie
 This smoke config uses `Qwen/Qwen2.5-0.5B-Instruct` with LoRA on a reduced
 subset to validate the real GPU-backed training path before scaling up.
 
+## Runpod Quick Start
+
+The repository now includes the minimum tracked Belief-R training assets plus
+Runpod bootstrap scripts, so you can clone and start training without manually
+rebuilding the current Belief-R splits first.
+
+Recommended sequence on a GPU Runpod PyTorch/CUDA image:
+
+```bash
+git clone https://github.com/laiyuchen164-creator/training.git
+cd training
+bash scripts/runpod_train_belief_r_qwen05b_balanced_full.sh
+```
+
+That single command path will:
+
+- create `.venv/` if needed
+- verify CUDA-backed `torch` is available
+- install the non-`torch` Python dependencies
+- install the repo in editable mode
+- ensure the Belief-R training assets exist
+- run unit tests
+- launch the current main HF/LoRA training config
+
+Outputs land in:
+
+- `runs/cipc_belief_r_qwen05b_lora_balanced_full_v1/`
+
+If you want a quick validation run first:
+
+```bash
+bash scripts/runpod_train_belief_r_qwen05b_smoke.sh
+```
+
 ## Second Dataset Path
 
 The repo also includes a second transformed dataset built from the official

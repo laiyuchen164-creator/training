@@ -1,0 +1,101 @@
+{
+  "dataset": "belief_r_commitment_control",
+  "seed": 7,
+  "control_label_space": [
+    "preserve",
+    "weaken",
+    "replace"
+  ],
+  "active_control_labels": [
+    "preserve",
+    "replace"
+  ],
+  "answer_label_space": [
+    "a",
+    "b",
+    "c"
+  ],
+  "total_pairs": 1282,
+  "total_examples": 2564,
+  "skipped_pairs": 0,
+  "split_pair_counts": {
+    "train": 1025,
+    "dev": 127,
+    "test": 130
+  },
+  "split_example_counts": {
+    "train": 2050,
+    "dev": 254,
+    "test": 260
+  },
+  "overall_condition_counts": {
+    "full_info": 1282,
+    "incremental_overturn_reasoning": 1018,
+    "incremental_no_overturn": 264
+  },
+  "overall_control_counts": {
+    "replace": 2036,
+    "preserve": 528
+  },
+  "overall_answer_counts": {
+    "c": 2036,
+    "b": 264,
+    "a": 264
+  },
+  "by_split": {
+    "train": {
+      "pairs": 1025,
+      "examples": 2050,
+      "condition_counts": {
+        "full_info": 1025,
+        "incremental_overturn_reasoning": 814,
+        "incremental_no_overturn": 211
+      },
+      "control_counts": {
+        "replace": 1628,
+        "preserve": 422
+      },
+      "answer_counts": {
+        "c": 1628,
+        "b": 210,
+        "a": 212
+      }
+    },
+    "dev": {
+      "pairs": 127,
+      "examples": 254,
+      "condition_counts": {
+        "full_info": 127,
+        "incremental_overturn_reasoning": 101,
+        "incremental_no_overturn": 26
+      },
+      "control_counts": {
+        "replace": 202,
+        "preserve": 52
+      },
+      "answer_counts": {
+        "c": 202,
+        "a": 28,
+        "b": 24
+      }
+    },
+    "test": {
+      "pairs": 130,
+      "examples": 260,
+      "condition_counts": {
+        "full_info": 130,
+        "incremental_no_overturn": 27,
+        "incremental_overturn_reasoning": 103
+      },
+      "control_counts": {
+        "preserve": 54,
+        "replace": 206
+      },
+      "answer_counts": {
+        "a": 24,
+        "c": 206,
+        "b": 30
+      }
+    }
+  }
+}
