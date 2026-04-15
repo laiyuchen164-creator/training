@@ -1,0 +1,15 @@
+Initial turn.
+
+Premises:
+{premises}
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}
+
+Choose the best answer under the currently available premises.
+Use `premise_role = unclear` and `relation_to_prior = n_a` on this turn.

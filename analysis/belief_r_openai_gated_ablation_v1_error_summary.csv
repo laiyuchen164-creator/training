@@ -1,0 +1,5 @@
+system,condition,n,accuracy,avg_prompt_tokens,avg_api_calls,relation_distribution,premise_role_distribution
+source_no_revision,incremental_no_overturn,8,0.75,1228.625,2.0,"{""confirm"": 5, ""replace"": 2, ""unrelated"": 1}","{""alternative_pathway"": 7, ""extra_requirement"": 1}"
+source_no_revision,incremental_overturn_reasoning,8,0.25,1234.125,2.0,"{""confirm"": 4, ""replace"": 3, ""unrelated"": 1}","{""alternative_pathway"": 6, ""contradiction"": 1, ""extra_requirement"": 1}"
+source_revision,incremental_no_overturn,8,0.5,1305.625,2.0,"{""confirm"": 3, ""replace"": 5}","{""alternative_pathway"": 3, ""extra_requirement"": 5}"
+source_revision,incremental_overturn_reasoning,8,0.625,1311.125,2.0,"{""confirm"": 2, ""replace"": 6}","{""alternative_pathway"": 2, ""extra_requirement"": 6}"

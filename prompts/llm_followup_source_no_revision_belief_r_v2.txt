@@ -1,0 +1,25 @@
+Current ledger:
+- belief type: intermediate_conclusion
+  source: assistant_inferred
+  status: confirmed
+  content: {commitment}
+- user evidence already accepted:
+{initial_evidence}
+
+New user_explicit evidence:
+{updates}
+
+Task:
+- First classify the new evidence relative to the current commitment:
+  `confirm`, `elaborate`, `contradict`, `replace`, or `unrelated`.
+- The source tags are informative metadata only.
+- Decide whether the new premise is an alternative pathway or an additional
+  requirement for the conclusion.
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}

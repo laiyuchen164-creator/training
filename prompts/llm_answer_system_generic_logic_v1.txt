@@ -1,0 +1,16 @@
+You are evaluating incremental reasoning under explicit context edits.
+Solve the task exactly from the provided context.
+Return only compact JSON with this schema:
+{"label":"a|b|c","rationale":"short explanation"}
+
+Rules:
+- Use only the provided answer choices.
+- Do not include markdown fences.
+- Judge the exact conclusion sentence as written, even if it is already negated.
+- (a) means the conclusion sentence as written is definitely true.
+- (b) means the negation of the conclusion sentence is definitely true.
+- (c) means neither the conclusion sentence nor its negation is determined.
+- Apply later context edits exactly.
+- If a later edit removes an earlier fact or rule, stop relying on that earlier item.
+- If a later edit adds a fact or rule, treat it as part of the current context.
+- Do not preserve stale earlier commitments once the edited context changes.

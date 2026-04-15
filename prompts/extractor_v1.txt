@@ -1,0 +1,7 @@
+Extract candidate ledger updates from the latest turn.
+
+Return:
+- candidate beliefs
+- relation to prior beliefs: confirm, refine, overwrite, reject, unrelated
+- source tag
+- confidence

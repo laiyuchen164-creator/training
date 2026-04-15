@@ -1,0 +1,7 @@
+split,condition,n,control_decision_accuracy,final_answer_accuracy,joint_accuracy,consistency_rate_predicted,consistency_rate_gold,early_commitment_persistence,late_evidence_takeover,assistant_assumption_survival,correction_uptake,replace_or_weaken_count,method
+test,full_info,130,0.8154,0.7462,0.7385,0.9154,0.7462,0.301,0.699,0.301,0.699,103,CIPC
+test,incremental_no_overturn,27,0.9259,0.9259,0.9259,1.0,0.9259,0.0,0.0,0.0,0.0,0,CIPC
+test,incremental_overturn_reasoning,103,0.9806,0.7961,0.7961,0.8155,0.7961,0.2039,0.7961,0.2039,0.7961,103,CIPC
+test,full_info,130,0.3846,0.3846,0.3846,1.0,0.3846,0.6505,0.3495,0.6505,0.3495,103,frozen_prompt_source_revision
+test,incremental_no_overturn,27,0.5926,0.5926,0.5926,1.0,0.5926,0.0,0.0,0.0,0.0,0,frozen_prompt_source_revision
+test,incremental_overturn_reasoning,103,0.2718,0.2718,0.2718,1.0,0.2718,0.7282,0.2718,0.7282,0.2718,103,frozen_prompt_source_revision

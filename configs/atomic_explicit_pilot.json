@@ -1,0 +1,31 @@
+{
+  "run_name": "atomic_explicit_pilot_v1",
+  "seed": 17,
+  "data": {
+    "dataset_name": "atomic_explicit_revision",
+    "raw_dir": "data/raw/atomic",
+    "processed_path": "data/processed/atomic_explicit_revision.jsonl",
+    "stats_path": "data/processed/atomic_explicit_revision_stats.json",
+    "refresh_data": false,
+    "max_seed_examples": 300
+  },
+  "dataset": {
+    "include_conditions": [
+      "full_info",
+      "incremental_no_overturn",
+      "incremental_overturn_reasoning"
+    ],
+    "sample_size_per_condition": {
+      "full_info": 20,
+      "incremental_no_overturn": 20,
+      "incremental_overturn_reasoning": 20
+    }
+  },
+  "systems": [
+    "raw_history",
+    "running_summary",
+    "structured_no_source",
+    "source_no_revision",
+    "source_revision"
+  ]
+}

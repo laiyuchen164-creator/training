@@ -1,0 +1,25 @@
+Current ledger:
+- belief type: intermediate_conclusion
+  source: assistant_inferred
+  status: tentative
+  content: {commitment}
+- user evidence already accepted:
+{initial_evidence}
+
+New user_explicit evidence:
+{updates}
+
+Revision policy:
+- Later user_explicit evidence overrides assistant_inferred tentative commitments when they conflict.
+- Do not preserve a stale assistant-generated conclusion just because it appeared earlier.
+- If the new evidence undercuts certainty, revise to the conservative answer.
+
+Re-answer the same question.
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}

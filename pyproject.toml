@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "source-aware-belief-revision"
+version = "0.1.0"
+description = "Minimal EMNLP pilot for source-aware revision of intermediate commitments."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "Codex"}]
+dependencies = [
+    "numpy>=2.4",
+    "pyyaml>=6.0",
+    "torch>=2.11",
+    "transformers>=5.5",
+    "peft>=0.19",
+    "accelerate>=1.13",
+    "datasets>=4.8",
+]
+
+[tool.setuptools.packages.find]
+include = ["src*"]

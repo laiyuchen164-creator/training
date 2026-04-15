@@ -1,0 +1,32 @@
+Current ledger:
+- belief type: intermediate_conclusion
+  source: assistant_inferred
+  status: tentative
+  content: {commitment}
+- user evidence already accepted:
+{initial_evidence}
+
+New user_explicit evidence:
+{updates}
+
+Revision policy:
+- First classify the new evidence relative to the current commitment:
+  `confirm`, `elaborate`, `contradict`, `replace`, or `unrelated`.
+- Only revise the prior commitment if the correct relation is `contradict` or
+  `replace`.
+- Treat `confirm` and `elaborate` as preserve-or-strengthen operations.
+- Treat `unrelated` as leave-unchanged.
+- Do not revise a prior commitment unless the new information changes its truth
+  conditions or directly conflicts with it.
+- If the new evidence undercuts certainty by introducing an extra requirement,
+  use `replace` and revise conservatively.
+
+Re-answer the same question.
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}

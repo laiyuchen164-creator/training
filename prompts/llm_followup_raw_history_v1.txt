@@ -1,0 +1,12 @@
+New information has arrived:
+{updates}
+
+Re-answer the same question using the full conversation history, including your previous answer.
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}

@@ -1,0 +1,26 @@
+Current ledger:
+- belief type: intermediate_conclusion
+  source: assistant_inferred
+  status: tentative
+  content: {commitment}
+- user evidence already accepted:
+{initial_evidence}
+
+New user_explicit edits:
+{updates}
+
+Revision policy:
+- Later user_explicit edits override assistant_inferred tentative commitments when they conflict.
+- If a later edit removes an earlier fact or rule, stop relying on that earlier item.
+- If a later edit adds a fact or rule, treat it as part of the current context.
+- If the edited context no longer determines the conclusion, answer conservatively.
+
+Re-answer the same question.
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}

@@ -1,0 +1,24 @@
+Current ledger:
+- belief type: intermediate_conclusion
+  source: assistant_inferred
+  status: confirmed
+  content: {commitment}
+- user evidence already accepted:
+{initial_evidence}
+
+New user_explicit edits:
+{updates}
+
+Task:
+- Use the ledger and the edits to answer again.
+- The source tags are informative metadata only.
+- Do not automatically discard the earlier assistant commitment just because a new edit arrived.
+- Judge from the current context after applying the stated edits.
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}

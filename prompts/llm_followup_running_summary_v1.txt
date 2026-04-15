@@ -1,0 +1,18 @@
+Running summary of prior state:
+{summary}
+
+Your previous answer:
+{previous_answer}
+
+New information:
+{updates}
+
+Re-answer the same question.
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}

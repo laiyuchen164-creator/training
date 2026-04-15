@@ -1,0 +1,81 @@
+{
+  "split": "test",
+  "cipc": {
+    "n": 260,
+    "control_decision_accuracy": 0.8923,
+    "final_answer_accuracy": 0.7846,
+    "joint_accuracy": 0.7808,
+    "consistency_rate_predicted": 0.8846,
+    "consistency_rate_gold": 0.7846,
+    "early_commitment_persistence": 0.2524,
+    "late_evidence_takeover": 0.7476,
+    "assistant_assumption_survival": 0.2524,
+    "correction_uptake": 0.7476,
+    "replace_or_weaken_count": 206
+  },
+  "frozen_prompt_source_revision": {
+    "n": 260,
+    "control_decision_accuracy": 0.3615,
+    "final_answer_accuracy": 0.3615,
+    "joint_accuracy": 0.3615,
+    "consistency_rate_predicted": 1.0,
+    "consistency_rate_gold": 0.3615,
+    "early_commitment_persistence": 0.6893,
+    "late_evidence_takeover": 0.3107,
+    "assistant_assumption_survival": 0.6893,
+    "correction_uptake": 0.3107,
+    "replace_or_weaken_count": 206
+  },
+  "prompt_run_manifest": {
+    "config": {
+      "run_name": "belief_r_commitment_test_prompt_source_revision",
+      "seed": 7,
+      "data": {
+        "dataset_name": "belief_r",
+        "raw_dir": "data/raw/belief_r",
+        "processed_path": "data/processed/belief_r_incremental_commitment_test_subset.jsonl",
+        "stats_path": "data/processed/belief_r_incremental_commitment_test_subset_stats.json",
+        "refresh_data": false
+      },
+      "dataset": {
+        "include_conditions": [
+          "full_info",
+          "incremental_no_overturn",
+          "incremental_overturn_reasoning"
+        ],
+        "sample_size_per_condition": {
+          "full_info": 130,
+          "incremental_no_overturn": 27,
+          "incremental_overturn_reasoning": 103
+        }
+      },
+      "backend": {
+        "type": "llm",
+        "provider": "openai",
+        "api_key_env": "OPENAI_API_KEY",
+        "model": "gpt-5.4-mini",
+        "fallback_models": [
+          "gpt-5-mini",
+          "gpt-4.1-mini"
+        ],
+        "temperature": 0.0,
+        "max_tokens": 180,
+        "timeout_seconds": 90
+      },
+      "systems": [
+        "source_revision"
+      ]
+    },
+    "dataset_stats": {
+      "source_split": "test",
+      "subset_examples": 260,
+      "condition_counts": {
+        "full_info": 130,
+        "incremental_no_overturn": 27,
+        "incremental_overturn_reasoning": 103
+      }
+    },
+    "sampled_examples": 260,
+    "prediction_path": "runs\\belief_r_commitment_test_prompt_source_revision\\predictions.jsonl"
+  }
+}

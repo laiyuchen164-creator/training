@@ -1,0 +1,32 @@
+Full-information belief-revision judgment.
+
+There are three premises. Premise 1 and Premise 2 support an initial inference.
+Premise 3 is the extra condition that may either:
+- add an alternative pathway to the same outcome, so the earlier conclusion is
+  maintained; or
+- reveal an additional requirement / enabling condition, so the conclusion
+  should be weakened to uncertainty.
+
+Premise 1:
+{premise_1}
+
+Premise 2:
+{premise_2}
+
+Premise 3:
+{premise_3}
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}
+
+Before deciding, compare Premise 1 and Premise 3:
+- If Premise 3 is another independent route to the same outcome, keep the
+  original inference.
+- If Premise 3 sounds like a contextual precondition, enabling condition,
+  opportunity, resource, or environmental requirement for the outcome, choose
+  uncertainty.

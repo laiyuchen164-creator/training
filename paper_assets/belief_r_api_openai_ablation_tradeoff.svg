@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+<rect width="100%" height="100%" fill="#f8fafc"/>
+<text x="480.0" y="36" text-anchor="middle" font-family="Arial" font-size="24" fill="#0f172a">OpenAI Belief-Update Trade-off</text>
+<line x1="90.0" y1="70" x2="90.0" y2="470" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="90" y1="470.0" x2="910" y2="470.0" stroke="#e2e8f0" stroke-width="1"/>
+<text x="90.0" y="492" text-anchor="middle" font-family="Arial" font-size="13" fill="#475569">0.0</text>
+<text x="78" y="474.0" text-anchor="end" font-family="Arial" font-size="13" fill="#475569">0.0</text>
+<line x1="254.0" y1="70" x2="254.0" y2="470" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="90" y1="390.0" x2="910" y2="390.0" stroke="#e2e8f0" stroke-width="1"/>
+<text x="254.0" y="492" text-anchor="middle" font-family="Arial" font-size="13" fill="#475569">0.2</text>
+<text x="78" y="394.0" text-anchor="end" font-family="Arial" font-size="13" fill="#475569">0.2</text>
+<line x1="418.0" y1="70" x2="418.0" y2="470" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="90" y1="310.0" x2="910" y2="310.0" stroke="#e2e8f0" stroke-width="1"/>
+<text x="418.0" y="492" text-anchor="middle" font-family="Arial" font-size="13" fill="#475569">0.4</text>
+<text x="78" y="314.0" text-anchor="end" font-family="Arial" font-size="13" fill="#475569">0.4</text>
+<line x1="582.0" y1="70" x2="582.0" y2="470" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="90" y1="230.0" x2="910" y2="230.0" stroke="#e2e8f0" stroke-width="1"/>
+<text x="582.0" y="492" text-anchor="middle" font-family="Arial" font-size="13" fill="#475569">0.6</text>
+<text x="78" y="234.0" text-anchor="end" font-family="Arial" font-size="13" fill="#475569">0.6</text>
+<line x1="746.0" y1="70" x2="746.0" y2="470" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="90" y1="150.0" x2="910" y2="150.0" stroke="#e2e8f0" stroke-width="1"/>
+<text x="746.0" y="492" text-anchor="middle" font-family="Arial" font-size="13" fill="#475569">0.8</text>
+<text x="78" y="154.0" text-anchor="end" font-family="Arial" font-size="13" fill="#475569">0.8</text>
+<line x1="910.0" y1="70" x2="910.0" y2="470" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="90" y1="70.0" x2="910" y2="70.0" stroke="#e2e8f0" stroke-width="1"/>
+<text x="910.0" y="492" text-anchor="middle" font-family="Arial" font-size="13" fill="#475569">1.0</text>
+<text x="78" y="74.0" text-anchor="end" font-family="Arial" font-size="13" fill="#475569">1.0</text>
+<line x1="90" y1="70" x2="90" y2="470" stroke="#0f172a" stroke-width="2"/>
+<line x1="90" y1="470" x2="910" y2="470" stroke="#0f172a" stroke-width="2"/>
+<circle cx="582.0" cy="310.0" r="8" fill="#334155"/>
+<text x="594.0" y="300.0" font-family="Arial" font-size="14" fill="#0f172a">raw_history</text>
+<circle cx="500.0" cy="270.0" r="8" fill="#0f766e"/>
+<text x="512.0" y="260.0" font-family="Arial" font-size="14" fill="#0f172a">running_summary</text>
+<circle cx="746.0" cy="390.0" r="8" fill="#7c3aed"/>
+<text x="758.0" y="380.0" font-family="Arial" font-size="14" fill="#0f172a">source_no_revision</text>
+<circle cx="172.0" cy="110.0" r="8" fill="#dc2626"/>
+<text x="184.0" y="100.0" font-family="Arial" font-size="14" fill="#0f172a">source_revision</text>
+<circle cx="746.0" cy="390.0" r="8" fill="#2563eb"/>
+<text x="758.0" y="380.0" font-family="Arial" font-size="14" fill="#0f172a">structured_no_source</text>
+<text x="480.0" y="522" text-anchor="middle" font-family="Arial" font-size="16" fill="#0f172a">assistant_assumption_survival</text>
+<text x="28" y="270.0" text-anchor="middle" transform="rotate(-90 28 270.0)" font-family="Arial" font-size="16" fill="#0f172a">accuracy on overturn subset</text>
+</svg>

@@ -1,0 +1,43 @@
+{
+  "run_name": "belief_r_openai_gated_stable_v1_scale50",
+  "seed": 13,
+  "data": {
+    "dataset_name": "belief_r",
+    "raw_dir": "data/raw/belief_r",
+    "processed_path": "data/processed/belief_r_incremental.jsonl",
+    "stats_path": "data/processed/belief_r_incremental_stats.json",
+    "refresh_data": false
+  },
+  "dataset": {
+    "include_conditions": [
+      "full_info",
+      "incremental_no_overturn",
+      "incremental_overturn_reasoning"
+    ],
+    "sample_size_per_condition": {
+      "full_info": 50,
+      "incremental_no_overturn": 50,
+      "incremental_overturn_reasoning": 50
+    }
+  },
+  "backend": {
+    "type": "llm",
+    "provider": "openai",
+    "api_key_env": "OPENAI_API_KEY",
+    "model": "gpt-5.4-mini",
+    "fallback_models": [
+      "gpt-5-mini",
+      "gpt-4.1-mini"
+    ],
+    "temperature": 0.0,
+    "max_tokens": 180,
+    "timeout_seconds": 90
+  },
+  "systems": [
+    "raw_history",
+    "running_summary",
+    "structured_no_source",
+    "source_no_revision",
+    "source_revision"
+  ]
+}

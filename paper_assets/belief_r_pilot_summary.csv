@@ -1,0 +1,13 @@
+system,condition,n,accuracy,avg_prompt_tokens_approx,avg_cost_normalized_task_success,wrong_turn_recovery_rate,stale_belief_persistence,assistant_assumption_survival,correction_uptake,deprecated_belief_leakage
+raw_history,full_info,40,0.75,123.08,6.4789,0.0,0.0,0.0,0.0,0.0
+raw_history,incremental_no_overturn,40,0.875,126.03,7.2736,0.0,0.0,0.0,0.0,0.0
+raw_history,incremental_overturn_reasoning,40,0.525,126.62,4.0918,0.525,0.475,0.475,0.525,0.0
+running_summary,full_info,40,0.75,123.08,6.4789,0.0,0.0,0.0,0.0,0.0
+running_summary,incremental_no_overturn,40,0.8,126.03,6.6764,0.0,0.0,0.0,0.0,0.0
+running_summary,incremental_overturn_reasoning,40,0.6,126.62,4.774,0.6,0.4,0.4,0.6,0.0
+source_revision,full_info,40,0.75,123.08,6.4789,0.0,0.0,0.0,0.0,0.0
+source_revision,incremental_no_overturn,40,0.475,126.03,3.8774,0.0,0.0,0.0,0.0,0.0
+source_revision,incremental_overturn_reasoning,40,0.7,126.62,5.663,0.7,0.3,0.3,0.7,0.0
+structured_no_source,full_info,40,0.75,123.08,6.4789,0.0,0.0,0.0,0.0,0.0
+structured_no_source,incremental_no_overturn,40,0.575,126.03,4.863,0.0,0.0,0.0,0.0,0.0
+structured_no_source,incremental_overturn_reasoning,40,0.65,126.62,5.2929,0.65,0.35,0.35,0.65,0.0

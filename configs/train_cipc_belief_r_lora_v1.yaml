@@ -1,0 +1,32 @@
+{
+  "run_name": "cipc_belief_r_lora_v1",
+  "run_dir": "runs/cipc_belief_r_lora_v1",
+  "analysis_report_path": "analysis/cipc_belief_r_lora_v1_report.md",
+  "seed": 7,
+  "method_name": "CIPC",
+  "notes": {
+    "current_backend": "numpy_multitask_baseline",
+    "planned_upgrade": "hf_lora"
+  },
+  "data": {
+    "train_path": "data/processed/belief_r_commitment_control_train.jsonl",
+    "dev_path": "data/processed/belief_r_commitment_control_dev.jsonl",
+    "test_path": "data/processed/belief_r_commitment_control_test.jsonl"
+  },
+  "labels": {
+    "control_labels": ["preserve", "weaken", "replace"],
+    "answer_labels": ["a", "b", "c"]
+  },
+  "model": {
+    "type": "hash_linear_multitask",
+    "feature_dim": 8192
+  },
+  "training": {
+    "num_epochs": 40,
+    "batch_size": 64,
+    "learning_rate": 0.35,
+    "l2": 0.0001,
+    "answer_loss_weight": 1.0,
+    "oversample_control_labels": true
+  }
+}

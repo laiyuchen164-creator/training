@@ -1,0 +1,45 @@
+# Environment and secrets
+.env
+.env.*
+.venv/
+venv/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+
+# Training outputs and experiment logs
+runs/
+checkpoints/
+wandb/
+outputs/
+logs/
+
+# Model artifacts
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+
+# Dataset and downloaded artifact caches
+data/raw/
+data/processed/
+*.zip
+*.tar
+*.tgz
+*.gz
+*.bz2
+*.xz
+
+# Keep data conversion scripts tracked
+!data/*.py

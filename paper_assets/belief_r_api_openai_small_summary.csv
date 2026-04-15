@@ -1,0 +1,13 @@
+system,condition,n,accuracy,avg_prompt_tokens_approx,avg_cost_normalized_task_success,wrong_turn_recovery_rate,stale_belief_persistence,assistant_assumption_survival,correction_uptake,deprecated_belief_leakage
+raw_history,full_info,2,0.0,226.5,0.0,0.0,0.0,0.0,0.0,0.0
+raw_history,incremental_no_overturn,2,0.5,660.0,0.8404,0.0,0.0,0.0,0.0,0.0
+raw_history,incremental_overturn_reasoning,2,0.0,602.0,0.0,0.0,1.0,1.0,0.0,0.0
+running_summary,full_info,2,0.0,226.5,0.0,0.0,0.0,0.0,0.0,0.0
+running_summary,incremental_no_overturn,2,1.0,549.0,1.8386,0.0,0.0,0.0,0.0,0.0
+running_summary,incremental_overturn_reasoning,2,0.0,511.5,0.0,0.0,1.0,1.0,0.0,0.0
+source_revision,full_info,2,0.0,226.5,0.0,0.0,0.0,0.0,0.0,0.0
+source_revision,incremental_no_overturn,2,0.0,573.0,0.0,0.0,0.0,0.0,0.0,0.0
+source_revision,incremental_overturn_reasoning,2,1.0,535.0,1.8701,1.0,0.0,0.0,1.0,0.0
+structured_no_source,full_info,2,0.0,226.5,0.0,0.0,0.0,0.0,0.0,0.0
+structured_no_source,incremental_no_overturn,2,1.0,508.0,1.9863,0.0,0.0,0.0,0.0,0.0
+structured_no_source,incremental_overturn_reasoning,2,0.0,470.0,0.0,0.0,1.0,1.0,0.0,0.0

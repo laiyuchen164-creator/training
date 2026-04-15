@@ -1,0 +1,14 @@
+Initial turn.
+
+Current premises:
+{premises}
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}
+
+Choose the best answer for the exact conclusion sentence as written.

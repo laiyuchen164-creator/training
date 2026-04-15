@@ -1,0 +1,25 @@
+Current structured memory:
+- prior premises:
+{initial_premises}
+- current intermediate commitment:
+{commitment}
+
+New information:
+{updates}
+
+Before answering, classify the new information relative to the current intermediate commitment:
+- `confirm`
+- `elaborate`
+- `contradict`
+- `replace`
+- `unrelated`
+
+Update the answer using the memory above and the new information.
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}

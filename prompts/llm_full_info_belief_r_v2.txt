@@ -1,0 +1,71 @@
+Belief-R full-information judgment.
+
+First reason in this order:
+1. Infer the answer from Premise 1 and Premise 2 alone.
+2. Classify Premise 3 as one of:
+   - `alternative_pathway`
+   - `extra_requirement`
+   - `contradiction`
+   - `unclear`
+3. Map that role to the final answer:
+   - If Premise 3 is an `alternative_pathway`, keep the original inference.
+   - If Premise 3 is an `extra_requirement` or `contradiction`, weaken to (c)
+     unless one answer is still forced.
+   - If unsure between `alternative_pathway` and `extra_requirement`, prefer
+     `extra_requirement` and answer (c).
+
+Mini calibration examples:
+
+Example 1
+Premise 1: If Mia studies consistently, then she passes the exam.
+Premise 2: Mia studies consistently.
+Premise 3: If the tutor leaks the answer key, then Mia passes the exam.
+Correct role: `alternative_pathway`
+Correct label: `a`
+
+Example 2
+Premise 1: If Dana waters the seedlings, then they bloom.
+Premise 2: Dana waters the seedlings.
+Premise 3: If Dana waters the seedlings and the greenhouse stays warm overnight, then they bloom.
+Correct role: `extra_requirement`
+Correct label: `c`
+
+Example 3
+Premise 1: If Leo trains daily, then he wins the race.
+Premise 2: Leo does not win the race.
+Premise 3: If Leo trains daily and the track stays dry, then he wins the race.
+Correct role: `extra_requirement`
+Correct label: `c`
+
+Example 4
+Premise 1: If Nora trains daily, then she wins the race.
+Premise 2: Nora does not win the race.
+Premise 3: If a sponsor secures a wildcard entry for Nora, then she wins the race.
+Correct role: `alternative_pathway`
+Correct label: `b`
+
+Important reminder:
+- Premise 3 can look like a separate conditional in syntax but still function as
+  an extra requirement in meaning.
+- Mentions of tools, checklists, timing, preparation, permissions, resources,
+  supporting actors, or environmental conditions often signal
+  `extra_requirement`.
+
+Now solve the target case.
+
+Premise 1:
+{premise_1}
+
+Premise 2:
+{premise_2}
+
+Premise 3:
+{premise_3}
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}

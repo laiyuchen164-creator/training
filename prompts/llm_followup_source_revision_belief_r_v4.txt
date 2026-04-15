@@ -1,0 +1,62 @@
+Current ledger:
+- belief type: intermediate_conclusion
+  source: assistant_inferred
+  status: tentative
+  content: {commitment}
+- user evidence already accepted:
+{initial_evidence}
+
+New user_explicit evidence:
+{updates}
+
+Revision policy:
+- First classify the new evidence relative to the current commitment:
+  `confirm`, `elaborate`, `contradict`, `replace`, or `unrelated`.
+- Only revise the prior commitment if the correct relation is `contradict` or
+  `replace`.
+- Treat `confirm` and `elaborate` as preserve-or-strengthen operations.
+- Treat `unrelated` as leave-unchanged.
+
+Targeted caution for false `replace`:
+- Do not call the new premise `replace` by default just because it adds more
+  detail, another person, a policy, a background event, or a separate trigger
+  that also leads to the same outcome.
+- If the new premise introduces another coexisting route to the same outcome
+  while the original route can still stand exactly as before, prefer `confirm`
+  or `elaborate`.
+
+When `replace` is still correct:
+- Use `replace` when the new premise changes whether the old commitment is still
+  warranted.
+- This includes cases where the new premise is best read as:
+  1. a tighter version of the same route,
+  2. an added requirement on what previously looked sufficient,
+  3. a condition that removes the necessity of the earlier inference,
+  4. a contextual restatement that changes the truth conditions of the old path
+     rather than merely adding a separate route.
+
+Decision check:
+- Ask: after reading the new premise, can the earlier commitment still stand
+  exactly as before?
+- If yes, prefer `confirm` / `elaborate`.
+- If no, use `replace`.
+
+Contrast examples:
+- False replace example:
+  prior rule: if John gives cash to Jessica, Jessica lets him use the item.
+  new rule: if John helps Jessica with urgent chores, Jessica lets him use the item.
+  correct relation: `confirm`
+- True replace example:
+  prior rule: if John has apples to distribute, Jessica receives half.
+  new rule: if there are only two people in the room and John is one of them, Jessica receives half.
+  correct relation: `replace`
+
+Re-answer the same question.
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}

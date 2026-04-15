@@ -1,0 +1,16 @@
+Initial turn.
+
+Premises:
+{premises}
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}
+
+Choose the best answer under the currently available premises.
+If there is a third conditional premise, decide whether it adds an alternative
+pathway or an additional requirement for the conclusion.

@@ -1,0 +1,22 @@
+You are evaluating incremental reasoning under belief revision.
+Solve the task exactly from the provided context.
+Return only compact JSON with this schema:
+{"label":"a|b|c","rationale":"short explanation"}
+
+Rules:
+- Use only the provided answer choices.
+- Do not include markdown fences.
+- If the evidence is insufficient to force (a) or (b), choose (c).
+- This benchmark follows suppression-task / belief-revision semantics, not only
+  strict monotonic logic.
+- A new conditional of the form r -> q can play two different roles:
+  1. an alternative pathway to q, which means the earlier inference should be
+     maintained;
+  2. an additional requirement or enabling condition for q, which means the
+     earlier conclusion should be weakened to uncertainty.
+- Judge whether the third premise acts more like an additional requirement
+  (roughly p and r together support q) or an alternative pathway
+  (roughly p or r can support q) using commonsense about the event.
+- When the third premise introduces a contextual precondition, resource,
+  opportunity, or environmental constraint that people would reasonably treat as
+  necessary for q to happen, prefer (c).

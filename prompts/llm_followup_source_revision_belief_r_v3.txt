@@ -1,0 +1,48 @@
+Current ledger:
+- belief type: intermediate_conclusion
+  source: assistant_inferred
+  status: tentative
+  content: {commitment}
+- user evidence already accepted:
+{initial_evidence}
+
+New user_explicit evidence:
+{updates}
+
+Revision policy:
+- First classify the new evidence relative to the current commitment:
+  `confirm`, `elaborate`, `contradict`, `replace`, or `unrelated`.
+- Only revise the prior commitment if the correct relation is `contradict` or
+  `replace`.
+- Treat `confirm` and `elaborate` as preserve-or-strengthen operations.
+- Treat `unrelated` as leave-unchanged.
+- Do not call it `replace` just because the new rule contains more detail,
+  another person, more conditions, or a richer scenario.
+- If the new rule simply gives another way for the same outcome to happen while
+  leaving the old route intact, classify it as `confirm` or `elaborate`.
+- Use `replace` only when the new evidence changes the truth conditions of the
+  old route itself, such that the earlier route is no longer sufficient on its
+  own.
+
+Contrast mini-examples:
+- Preserve:
+  prior rule: if John packs the camera carefully, Jessica lets him use it.
+  new rule: if John helps with chores and Jessica sees the room is clean, Jessica lets him use it.
+  correct relation: `confirm`
+- Revise:
+  prior rule: if Dana waters the seedlings, they bloom.
+  new rule: if Dana waters the seedlings and the greenhouse stays warm overnight, they bloom.
+  correct relation: `replace`
+
+If the case is borderline between `confirm` and `replace`, prefer `confirm`
+unless the old route is explicitly being narrowed.
+
+Re-answer the same question.
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}

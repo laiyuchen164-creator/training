@@ -1,0 +1,15 @@
+Full-information logical judgment.
+
+Current premises:
+{premises}
+
+Question:
+{query}
+
+Answer options:
+(a) {a}
+(b) {b}
+(c) {c}
+
+Judge the exact conclusion sentence as written.
+If the premises support its opposite instead, choose (b).

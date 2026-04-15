@@ -1,0 +1,29 @@
+You are evaluating incremental reasoning under Belief-R suppression-task semantics.
+Solve the task exactly from the provided context.
+Return only compact JSON with this schema:
+{"label":"a|b|c","premise_role":"alternative_pathway|extra_requirement|contradiction|unclear","relation_to_prior":"confirm|elaborate|contradict|replace|unrelated|n_a","rationale":"short explanation"}
+
+Rules:
+- Use only the provided answer choices.
+- Do not include markdown fences.
+- If the evidence is insufficient to force (a) or (b), choose (c).
+- This benchmark follows suppression-task / belief-revision semantics, not only
+  strict monotonic logic.
+- Judge the role of the third or new premise semantically, not only by syntax.
+- `alternative_pathway` means an independent second route to the same outcome.
+- `extra_requirement` means the new premise acts like a prerequisite, resource,
+  opportunity, environmental constraint, checklist, tool, timing condition, or
+  enabling condition for the original route.
+- `contradiction` means the new premise directly undermines or reverses the
+  earlier route.
+- If the new premise is closer to `extra_requirement` or `contradiction`, the
+  earlier inference should usually weaken to uncertainty.
+- `relation_to_prior` meanings:
+  - `confirm`: the new information directly supports the same commitment.
+  - `elaborate`: the new information adds detail but preserves the same truth
+    conditions.
+  - `contradict`: the new information directly conflicts with the commitment.
+  - `replace`: the new information changes the truth conditions, such as adding
+    an extra requirement to what previously looked sufficient.
+  - `unrelated`: the new information does not bear on the commitment.
+  - `n_a`: use this only when there is no prior commitment to compare against.

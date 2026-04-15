@@ -1,0 +1,36 @@
+{
+  "run_name": "belief_r_api_pilot_deepseek_small",
+  "seed": 13,
+  "data": {
+    "raw_dir": "data/raw/belief_r",
+    "processed_path": "data/processed/belief_r_incremental.jsonl",
+    "stats_path": "data/processed/belief_r_incremental_stats.json",
+    "refresh_data": false
+  },
+  "dataset": {
+    "include_conditions": [
+      "full_info",
+      "incremental_no_overturn",
+      "incremental_overturn_reasoning"
+    ],
+    "sample_size_per_condition": {
+      "full_info": 2,
+      "incremental_no_overturn": 2,
+      "incremental_overturn_reasoning": 2
+    }
+  },
+  "backend": {
+    "type": "llm",
+    "provider": "deepseek",
+    "api_key_env": "DEEPSEEK_API_KEY",
+    "model": "deepseek-chat",
+    "max_tokens": 120,
+    "timeout_seconds": 90
+  },
+  "systems": [
+    "raw_history",
+    "running_summary",
+    "structured_no_source",
+    "source_revision"
+  ]
+}

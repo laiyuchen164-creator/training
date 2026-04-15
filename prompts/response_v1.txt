@@ -1,0 +1,6 @@
+Generate the final answer using the current ledger state.
+
+Rules:
+- Do not promote assistant-generated commitments to stable facts unless later
+  evidence supports them.
+- If incompatible active interpretations remain, answer conservatively.

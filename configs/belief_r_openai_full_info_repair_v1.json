@@ -1,0 +1,35 @@
+{
+  "run_name": "belief_r_openai_full_info_repair_v1",
+  "seed": 31,
+  "data": {
+    "dataset_name": "belief_r",
+    "raw_dir": "data/raw/belief_r",
+    "processed_path": "data/processed/belief_r_incremental.jsonl",
+    "stats_path": "data/processed/belief_r_incremental_stats.json",
+    "refresh_data": false
+  },
+  "dataset": {
+    "include_conditions": [
+      "full_info"
+    ],
+    "sample_size_per_condition": {
+      "full_info": 24
+    }
+  },
+  "backend": {
+    "type": "llm",
+    "provider": "openai",
+    "api_key_env": "OPENAI_API_KEY",
+    "model": "gpt-5.4-mini",
+    "fallback_models": [
+      "gpt-5-mini",
+      "gpt-4.1-mini"
+    ],
+    "temperature": 0.0,
+    "max_tokens": 180,
+    "timeout_seconds": 90
+  },
+  "systems": [
+    "source_revision"
+  ]
+}
