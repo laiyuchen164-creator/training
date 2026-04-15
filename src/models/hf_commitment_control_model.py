@@ -59,6 +59,7 @@ class HFCommitmentControlModel(nn.Module):
         control_labels: torch.Tensor | None = None,
         answer_labels: torch.Tensor | None = None,
         control_class_weights: torch.Tensor | None = None,
+        answer_class_weights: torch.Tensor | None = None,
         answer_loss_weight: float = 1.0,
     ) -> dict[str, torch.Tensor]:
         outputs = self.backbone(input_ids=input_ids, attention_mask=attention_mask)
@@ -76,7 +77,7 @@ class HFCommitmentControlModel(nn.Module):
         }
         if control_labels is not None and answer_labels is not None:
             ctrl_loss_fct = nn.CrossEntropyLoss(weight=control_class_weights)
-            ans_loss_fct = nn.CrossEntropyLoss()
+            ans_loss_fct = nn.CrossEntropyLoss(weight=answer_class_weights)
             ctrl_loss = ctrl_loss_fct(control_logits, control_labels)
             ans_loss = ans_loss_fct(answer_logits, answer_labels)
             payload["loss"] = ctrl_loss + answer_loss_weight * ans_loss

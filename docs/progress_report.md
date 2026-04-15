@@ -582,3 +582,71 @@ Interpretation:
 - The next training step is no longer "make HF work"; it is "scale the HF run
   to a sensible subset/full split and tune optimization so no-overturn does not
   collapse."
+
+## Stage 20 - HF/LoRA Balanced Local Pilot
+
+Status: completed
+
+- Upgraded the HF trainer to handle the main class-imbalance problem:
+  - deterministic subset selection instead of taking the first rows only
+  - weighted sampling for `control_label`
+  - answer-label class weights
+- Added a more serious local config:
+  `configs/train_cipc_belief_r_qwen05b_lora_balanced_full_v1.json`
+- Ran a full-train local LoRA pilot with
+  `Qwen/Qwen2.5-0.5B-Instruct`:
+  `runs/cipc_belief_r_qwen05b_lora_balanced_full_v1/`
+- Added a richer run report:
+  `analysis/cipc_belief_r_qwen05b_lora_balanced_full_v1_report.md`
+
+Readout:
+
+- Test split:
+  - `control_decision_accuracy = 0.6769`
+  - `final_answer_accuracy = 0.6462`
+  - `joint_accuracy = 0.6462`
+- Test by condition:
+  - `incremental_no_overturn`:
+    control `0.9259`, answer `0.9259`
+  - `incremental_overturn_reasoning`:
+    control `0.6117`, answer `0.5728`
+  - `full_info`:
+    control `0.6769`, answer `0.6462`
+
+Interpretation:
+
+- The HF line has now moved beyond a pure smoke test.
+- Most importantly, the earlier HF `no-overturn` collapse has been fixed.
+- The remaining weakness is now concentrated where it should be:
+  overturn propagation still lags, with too much early-commitment persistence.
+- This run already beats the frozen prompt baseline, but still trails the
+  stronger local NumPy multitask baseline.
+
+## Stage 21 - HF Balanced vs Frozen Prompt Baseline
+
+Status: completed
+
+- Compared the new HF balanced full run against the frozen prompt
+  `source_revision` baseline on the same Belief-R test split.
+- Added:
+  - `analysis/cipc_qwen05b_balanced_full_vs_prompt_test_report.md`
+  - `paper_assets/cipc_qwen05b_balanced_full_vs_prompt_test_metrics.csv`
+
+Readout:
+
+- Overall test answer accuracy:
+  - HF balanced full `CIPC`: `0.6462`
+  - frozen prompt `source_revision`: `0.3615`
+- Overturn answer accuracy:
+  - HF balanced full `CIPC`: `0.5728`
+  - frozen prompt `source_revision`: `0.2718`
+- Overturn early-commitment persistence:
+  - HF balanced full `CIPC`: `0.4272`
+  - frozen prompt `source_revision`: `0.7282`
+
+Interpretation:
+
+- The local HF LoRA path is now clearly better than the frozen prompt baseline.
+- The project's main remaining comparison is no longer against prompt tuning;
+  it is against the stronger local NumPy training baseline and, later, against
+  larger real-model training runs.

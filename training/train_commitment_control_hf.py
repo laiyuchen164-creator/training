@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import random
 from dataclasses import dataclass
@@ -11,7 +12,7 @@ import sys
 import numpy as np
 import torch
 from torch.optim import AdamW
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -36,6 +37,16 @@ def set_seed(seed: int) -> None:
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
+
+
+def deterministic_subset(examples: list[dict], max_examples: int | None, seed: int) -> list[dict]:
+    if not max_examples or max_examples >= len(examples):
+        return examples
+    ordered = sorted(
+        examples,
+        key=lambda row: hashlib.md5(f"{seed}:{row['example_id']}".encode("utf-8")).hexdigest(),
+    )
+    return ordered[:max_examples]
 
 
 def render_input_text(example: dict) -> str:
@@ -116,42 +127,6 @@ def collate_batch(batch: list[dict], tokenizer) -> dict:
     }
 
 
-def evaluate_model(
-    model,
-    dataloader,
-    *,
-    device,
-    control_labels: list[str],
-    answer_labels: list[str],
-) -> tuple[dict, list[dict]]:
-    model.eval()
-    predictions = []
-    with torch.no_grad():
-        for batch in dataloader:
-            input_ids = batch["input_ids"].to(device)
-            attention_mask = batch["attention_mask"].to(device)
-            outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-            ctrl_pred = outputs["control_logits"].argmax(dim=-1).cpu().tolist()
-            ans_pred = outputs["answer_logits"].argmax(dim=-1).cpu().tolist()
-            for example, ctrl_idx, ans_idx in zip(batch["examples"], ctrl_pred, ans_pred):
-                predictions.append(
-                    {
-                        "example_id": example["example_id"],
-                        "condition": example["condition"],
-                        "predicted_control_decision": control_labels[ctrl_idx],
-                        "predicted_final_answer": answer_labels[ans_idx],
-                        "gold_control_decision": example["control_label"],
-                        "gold_final_answer": example["final_answer_label"],
-                        "output_json": {
-                            "control_decision": control_labels[ctrl_idx],
-                            "final_answer": answer_labels[ans_idx],
-                        },
-                    }
-                )
-    metrics = compute_commitment_metrics([row["example"] for batch in dataloader for row in []], [])  # placeholder
-    return metrics, predictions
-
-
 def compute_predictions_metrics(examples: list[dict], predictions: list[dict]) -> dict:
     aligned = {prediction["example_id"]: prediction for prediction in predictions}
     aligned_predictions = [aligned[example["example_id"]] for example in examples]
@@ -172,6 +147,23 @@ def write_condition_csv(path: Path, rows: list[dict]) -> None:
         writer.writerows(rows)
 
 
+def build_weighted_sampler(
+    examples: list[dict],
+    *,
+    label_key: str,
+) -> WeightedRandomSampler:
+    counts: dict[str, int] = {}
+    for example in examples:
+        label = example[label_key]
+        counts[label] = counts.get(label, 0) + 1
+    weights = [1.0 / counts[example[label_key]] for example in examples]
+    return WeightedRandomSampler(
+        weights=torch.tensor(weights, dtype=torch.double),
+        num_samples=len(examples),
+        replacement=True,
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True)
@@ -187,7 +179,7 @@ def main() -> None:
     def load_examples(split: str) -> list[dict]:
         examples = read_jsonl(PROJECT_ROOT / config["data"][f"{split}_path"])
         max_examples = config["data"].get(f"max_{split}_examples")
-        return examples[:max_examples] if max_examples else examples
+        return deterministic_subset(examples, max_examples, config["seed"])
 
     train_examples = load_examples("train")
     dev_examples = load_examples("dev")
@@ -238,10 +230,20 @@ def main() -> None:
     )
 
     collate = lambda batch: collate_batch(batch, tokenizer)
+    train_sampler = None
+    if config["training"].get("oversample_control_labels", False):
+        train_sampler = build_weighted_sampler(train_examples, label_key="control_label")
     train_loader = DataLoader(
         train_dataset,
         batch_size=config["training"]["train_batch_size"],
-        shuffle=True,
+        shuffle=train_sampler is None,
+        sampler=train_sampler,
+        collate_fn=collate,
+    )
+    train_eval_loader = DataLoader(
+        train_dataset,
+        batch_size=config["training"]["eval_batch_size"],
+        shuffle=False,
         collate_fn=collate,
     )
     dev_loader = DataLoader(
@@ -265,6 +267,18 @@ def main() -> None:
         [
             len(train_examples) / (len(control_labels) * count) if count else 0.0
             for count in control_counts
+        ],
+        dtype=torch.float32,
+        device=device,
+    )
+    answer_counts = np.bincount(
+        [answer_to_idx[example["final_answer_label"]] for example in train_examples],
+        minlength=len(answer_labels),
+    )
+    answer_class_weights = torch.tensor(
+        [
+            len(train_examples) / (len(answer_labels) * count) if count else 0.0
+            for count in answer_counts
         ],
         dtype=torch.float32,
         device=device,
@@ -301,6 +315,7 @@ def main() -> None:
                     control_labels=control_labels_tensor,
                     answer_labels=answer_labels_tensor,
                     control_class_weights=control_class_weights,
+                    answer_class_weights=answer_class_weights,
                     answer_loss_weight=config["training"]["answer_loss_weight"],
                 )
                 loss = outputs["loss"] / grad_accumulation
@@ -377,7 +392,7 @@ def main() -> None:
     write_jsonl(run_dir / "train_log.jsonl", history)
 
     split_examples = {"train": train_examples, "dev": dev_examples, "test": test_examples}
-    split_loaders = {"train": train_loader, "dev": dev_loader, "test": test_loader}
+    split_loaders = {"train": train_eval_loader, "dev": dev_loader, "test": test_loader}
     summary = {}
     condition_rows = []
     for split in ("train", "dev", "test"):
