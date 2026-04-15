@@ -13,12 +13,36 @@ if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! "$PYTHON_BIN" - <<'PY' >/dev/null 2>&1
+import sys
+raise SystemExit(0 if sys.version_info >= (3, 11) else 1)
+PY
+then
+  echo "Python 3.11+ is required." >&2
+  exit 1
+fi
+
+create_or_replace_venv() {
+  rm -rf .venv
+  "$PYTHON_BIN" -m venv .venv --system-site-packages
+}
+
 if [ ! -f ".venv/bin/activate" ]; then
-  "$PYTHON_BIN" -m venv .venv
+  create_or_replace_venv
 fi
 
 source .venv/bin/activate
 python -m pip install --upgrade pip setuptools wheel
+
+if ! python - <<'PY' >/dev/null 2>&1
+import torch
+PY
+then
+  deactivate || true
+  create_or_replace_venv
+  source .venv/bin/activate
+  python -m pip install --upgrade pip setuptools wheel
+fi
 
 python - <<'PY'
 import sys

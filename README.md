@@ -98,6 +98,7 @@ Recommended sequence on a GPU Runpod PyTorch/CUDA image:
 ```bash
 git clone https://github.com/laiyuchen164-creator/training.git
 cd training
+bash scripts/runpod_preflight_check.sh
 bash scripts/runpod_train_belief_r_qwen05b_balanced_full.sh
 ```
 
@@ -110,6 +111,19 @@ That single command path will:
 - ensure the Belief-R training assets exist
 - run unit tests
 - launch the current main HF/LoRA training config
+
+If you want to verify the server before starting a paid run, use:
+
+```bash
+bash scripts/runpod_preflight_check.sh
+```
+
+This checks:
+
+- Python version
+- CUDA-backed `torch`
+- tracked Belief-R training data files
+- config-referenced train/dev/test paths
 
 Outputs land in:
 
