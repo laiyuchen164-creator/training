@@ -93,6 +93,10 @@ The repository now includes the minimum tracked Belief-R training assets plus
 Runpod bootstrap scripts, so you can clone and start training without manually
 rebuilding the current Belief-R splits first.
 
+The short Runpod continuation brief is in:
+
+- `docs/runpod_training_handoff.md`
+
 Recommended sequence on a GPU Runpod PyTorch/CUDA image:
 
 ```bash
