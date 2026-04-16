@@ -650,3 +650,52 @@ Interpretation:
 - The project's main remaining comparison is no longer against prompt tuning;
   it is against the stronger local NumPy training baseline and, later, against
   larger real-model training runs.
+
+## Stage 22 - Targeted Local HF Follow-Ups
+
+Status: completed
+
+- Added two targeted local follow-up configs:
+  - `configs/train_cipc_belief_r_qwen05b_lora_control_focused_v1.json`
+  - `configs/train_cipc_belief_r_qwen05b_lora_highrank_v1.json`
+- `control_focused_v1` changed only training emphasis:
+  more epochs, slightly lower learning rate, and lower `answer_loss_weight`.
+- `highrank_v1` changed LoRA capacity:
+  higher rank and alpha, slightly longer training, same data and metrics.
+- Added a summary report:
+  `analysis/cipc_qwen05b_local_followup_report.md`
+
+Readout:
+
+- `control_focused_v1` test:
+  - control `0.7692`
+  - answer `0.7923`
+  - joint `0.7615`
+  - early persistence `0.2330`
+  - late takeover `0.7670`
+- `highrank_v1` test:
+  - control `0.8615`
+  - answer `0.8462`
+  - joint `0.8231`
+  - early persistence `0.1359`
+  - late takeover `0.8641`
+
+Condition-level highlights:
+
+- `control_focused_v1`
+  - `incremental_no_overturn` answer `0.8889`
+  - `incremental_overturn_reasoning` answer `0.7670`
+- `highrank_v1`
+  - `incremental_no_overturn` answer `0.7778`
+  - `incremental_overturn_reasoning` answer `0.8641`
+
+Interpretation:
+
+- The local HF line no longer only looks viable in principle; it now produces
+  results that match or exceed the stronger local NumPy baseline on key axes.
+- `control_focused_v1` is the best balanced local HF run so far.
+- `highrank_v1` is the best raw local HF run so far, and exceeds the NumPy
+  baseline on overall and overturn accuracy.
+- The remaining problem is now a cleaner trade-off problem:
+  stronger overturn handling is achievable, but the most aggressive local HF
+  run gives back too much no-overturn conservatism.

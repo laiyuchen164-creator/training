@@ -106,6 +106,13 @@ bash scripts/runpod_preflight_check.sh
 bash scripts/runpod_train_belief_r_qwen05b_balanced_full.sh
 ```
 
+Current stronger local follow-up entrypoints:
+
+```bash
+bash scripts/runpod_train_belief_r_qwen05b_control_focused.sh
+bash scripts/runpod_train_belief_r_qwen05b_highrank.sh
+```
+
 That single command path will:
 
 - create `.venv/` if needed

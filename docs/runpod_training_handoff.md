@@ -36,8 +36,9 @@ is real-model training with the HF/LoRA backend.
   `training/train_commitment_control_hf.py`
 - HF model wrapper:
   `src/models/hf_commitment_control_model.py`
-- Main HF config:
-  `configs/train_cipc_belief_r_qwen05b_lora_balanced_full_v1.json`
+- Local frontier HF configs:
+  - `configs/train_cipc_belief_r_qwen05b_lora_control_focused_v1.json`
+  - `configs/train_cipc_belief_r_qwen05b_lora_highrank_v1.json`
 
 ### Main empirical results
 
@@ -48,10 +49,20 @@ is real-model training with the HF/LoRA backend.
   - report: `analysis/cipc_belief_r_lora_v1_report.md`
 - Current real HF/LoRA baseline:
   `Qwen/Qwen2.5-0.5B-Instruct`
-  - overall answer accuracy: `0.6462`
-  - overturn answer accuracy: `0.5728`
-  - no-overturn answer accuracy: `0.9259`
-  - report: `analysis/cipc_belief_r_qwen05b_lora_balanced_full_v1_report.md`
+  - old balanced-full baseline:
+    - overall answer accuracy: `0.6462`
+    - overturn answer accuracy: `0.5728`
+    - no-overturn answer accuracy: `0.9259`
+  - best balanced HF follow-up:
+    - overall answer accuracy: `0.7923`
+    - overturn answer accuracy: `0.7670`
+    - no-overturn answer accuracy: `0.8889`
+    - report: `analysis/cipc_qwen05b_local_followup_report.md`
+  - best raw HF follow-up:
+    - overall answer accuracy: `0.8462`
+    - overturn answer accuracy: `0.8641`
+    - no-overturn answer accuracy: `0.7778`
+    - report: `analysis/cipc_qwen05b_local_followup_report.md`
 - Same-split frozen prompt baseline:
   - overall answer accuracy: `0.3615`
   - overturn answer accuracy: `0.2718`
@@ -63,15 +74,21 @@ The project is not blocked on infrastructure anymore.
 
 - The prompt line is frozen and only kept as a baseline.
 - The HF/LoRA line is already better than the frozen prompt baseline.
-- The main remaining gap is not preserve behavior anymore.
-- The main remaining gap is overturn propagation:
-  too much early-commitment persistence, too little late-evidence takeover.
+- The HF line now has two local frontier points:
+  one more balanced, one more aggressive.
+- The main remaining problem is a trade-off problem:
+  keep the stronger overturn gains while recovering maintain-side stability.
 
 ## Main Objective On Runpod
 
-Use the new GPU server to push the HF/LoRA line past the current local
-`Qwen 0.5B balanced_full_v1` result while keeping the current Belief-R split
-and metrics fixed.
+Use the new GPU server to improve the local HF trade-off frontier while keeping
+the current Belief-R split and metrics fixed.
+
+Concretely:
+
+- retain or exceed the overturn strength of `highrank_v1`
+- while recovering the no-overturn behavior lost relative to
+  `control_focused_v1`
 
 ## What Not To Do
 
@@ -90,7 +107,7 @@ If a new Codex session starts on Runpod, read these first in this order:
 1. `README.md`
 2. `docs/runpod_training_handoff.md`
 3. `docs/progress_report.md`
-4. `analysis/cipc_belief_r_qwen05b_lora_balanced_full_v1_report.md`
+4. `analysis/cipc_qwen05b_local_followup_report.md`
 5. `analysis/cipc_vs_prompt_source_revision_test_report.md`
 
 ## First Commands On Runpod
@@ -110,24 +127,32 @@ bash scripts/runpod_train_belief_r_qwen05b_smoke.sh
 or, if the machine is already trusted and the goal is direct scaling:
 
 ```bash
-bash scripts/runpod_train_belief_r_qwen05b_balanced_full.sh
+bash scripts/runpod_train_belief_r_qwen05b_control_focused.sh
+bash scripts/runpod_train_belief_r_qwen05b_highrank.sh
 ```
 
 ## Success Criteria For The Next Round
 
 Minimum success:
 
-- beat the current HF baseline:
-  - overall answer accuracy `> 0.6462`
-  - overturn answer accuracy `> 0.5728`
-- while keeping no-overturn answer accuracy around `0.90+`
+- beat `control_focused_v1` on overall answer accuracy
+  while not dropping further on `incremental_no_overturn`
+- or beat `highrank_v1` on no-overturn while keeping comparable overturn
+
+Current local targets:
+
+- balanced target:
+  - overall answer accuracy `> 0.7923`
+  - overturn answer accuracy `> 0.7670`
+  - no-overturn answer accuracy `>= 0.8889`
+- aggressive target:
+  - overall answer accuracy `> 0.8462`
+  - overturn answer accuracy `> 0.8641`
 
 Stronger success:
 
-- materially reduce `early_commitment_persistence`
-- materially raise `late_evidence_takeover`
-- move closer to the current NumPy baseline
-  (`overall 0.7846`, `overturn 0.7961`)
+- materially reduce the trade-off between overturn and no-overturn
+- keep `early_commitment_persistence` low without collapsing maintain cases
 
 ## Highest-Value Next Steps
 
@@ -135,12 +160,14 @@ Priority order:
 
 1. Reproduce the tracked HF baseline on the server or run a smoke validation if
    the image is new.
-2. Keep the same data and metrics, but try a somewhat larger instruction model
-   if memory allows.
-3. Only after a stable larger-model run, consider optimization changes such as
-   stronger training or consistency-aware objectives.
-4. Compare every new run against:
-   - HF balanced full baseline
+2. Reproduce the two local frontier runs:
+   `control_focused_v1` and `highrank_v1`.
+3. Combine the better training emphasis from `control_focused_v1` with the
+   higher-capacity setting from `highrank_v1`.
+4. Only after that, try a somewhat larger instruction model if memory allows.
+5. Compare every new run against:
+   - HF control-focused baseline
+   - HF high-rank baseline
    - NumPy `CIPC` baseline
    - frozen prompt baseline
 
@@ -148,8 +175,10 @@ Priority order:
 
 - `scripts/runpod_preflight_check.sh`
 - `scripts/runpod_setup.sh`
-- `scripts/runpod_train_belief_r_qwen05b_balanced_full.sh`
-- `configs/train_cipc_belief_r_qwen05b_lora_balanced_full_v1.json`
+- `scripts/runpod_train_belief_r_qwen05b_control_focused.sh`
+- `scripts/runpod_train_belief_r_qwen05b_highrank.sh`
+- `configs/train_cipc_belief_r_qwen05b_lora_control_focused_v1.json`
+- `configs/train_cipc_belief_r_qwen05b_lora_highrank_v1.json`
 - `training/train_commitment_control_hf.py`
 - `src/models/hf_commitment_control_model.py`
 
@@ -161,7 +190,7 @@ The correct direction on Runpod is:
 - stay on training
 - keep the current tracked split
 - use HF/LoRA
-- improve the real-model line until it closes the gap to the NumPy baseline
+- improve the HF trade-off frontier rather than reverting to prompt work
 
 Do not let the project drift back into prompt tweaking or benchmark expansion
 before the HF line is stronger.
