@@ -1,0 +1,15 @@
+{
+  "test": {
+    "n": 260,
+    "control_decision_accuracy": 0.2077,
+    "final_answer_accuracy": 0.2077,
+    "joint_accuracy": 0.2077,
+    "consistency_rate_predicted": 1.0,
+    "consistency_rate_gold": 0.2077,
+    "early_commitment_persistence": 1.0,
+    "late_evidence_takeover": 0.0,
+    "assistant_assumption_survival": 1.0,
+    "correction_uptake": 0.0,
+    "replace_or_weaken_count": 206
+  }
+}

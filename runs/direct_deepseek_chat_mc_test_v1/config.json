@@ -1,0 +1,9 @@
+{
+  "provider": "deepseek",
+  "model": "deepseek-chat",
+  "api_key_env": "DEEPSEEK_API_KEY",
+  "input_path": "data/processed/belief_r_commitment_control_test.jsonl",
+  "max_tokens": 32,
+  "timeout_seconds": 90,
+  "temperature": 0.0
+}

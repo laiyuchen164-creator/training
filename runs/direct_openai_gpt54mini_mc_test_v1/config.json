@@ -1,0 +1,9 @@
+{
+  "provider": "openai",
+  "model": "gpt-5.4-mini",
+  "api_key_env": "OPENAI_API_KEY",
+  "input_path": "data/processed/belief_r_commitment_control_test.jsonl",
+  "max_tokens": 32,
+  "timeout_seconds": 90,
+  "temperature": 0.0
+}
