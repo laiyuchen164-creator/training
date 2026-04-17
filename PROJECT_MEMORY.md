@@ -76,6 +76,19 @@ Last updated: 2026-04-17 UTC
   - overturn answer: `0.9515`
   - no-overturn answer: `0.5185`
 - Interpretation: strengthening the margin term inside the current hybrid preserve form did not repair maintain cases; it pushed the system further toward aggressive overturn behavior.
+- Added a frozen external-model baseline using `Qwen/Qwen2.5-0.5B-Instruct` as a zero-shot multiple-choice scorer on the same Belief-R commitment-control split.
+- Frozen Qwen MC baseline results:
+  - train overall answer: `0.7200`
+  - dev overall answer: `0.6929`
+  - test overall answer: `0.7308`
+  - test overturn answer: `0.8835`
+  - test no-overturn answer: `0.1481`
+- Interpretation: the frozen Qwen baseline is much stronger than the old frozen prompt baseline on overturn, but it nearly collapses on no-overturn by over-predicting `replace` / answer `c`. It is an informative external reference point, but not competitive with the trained CIPC line on the actual trade-off objective.
+- Added direct external API baselines that do not reuse the old `source_revision` prompt framework. These baselines directly answer each test example with final label `a/b/c` and are then mapped back into commitment metrics.
+- Direct API baseline results on `belief_r_commitment_control_test.jsonl`:
+  - OpenAI `gpt-5.4-mini`: overall `0.2077`, overturn `0.0000`, no-overturn `1.0000`
+  - DeepSeek `deepseek-chat`: overall `0.2192`, overturn `0.0097`, no-overturn `1.0000`
+- Interpretation: both direct API baselines collapse toward always preserving the early commitment and almost never predict the required `c` answer on overturn cases. This is the opposite extreme from the frozen local Qwen baseline and further supports that the key challenge is calibrated preserve-vs-revise control rather than generic language-model strength.
 
 ## Current Working Conclusion
 
