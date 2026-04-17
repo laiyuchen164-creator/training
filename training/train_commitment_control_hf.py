@@ -358,6 +358,9 @@ def main() -> None:
                     answer_class_weights=answer_class_weights,
                     answer_loss_weight=config["training"]["answer_loss_weight"],
                     consistency_loss_weight=config["training"].get("consistency_loss_weight", 0.0),
+                    lambda_prop=config["training"].get("lambda_prop", 0.0),
+                    beta_replace_margin=config["training"].get("beta_replace_margin", 0.0),
+                    margin_m=config["training"].get("margin_m", 0.0),
                 )
                 loss = outputs["loss"] / grad_accumulation
 
