@@ -163,7 +163,7 @@ However, the prompt line was eventually frozen because:
 ## 3.2 Phase B: NumPy Training Baseline (CIPC v1)
 
 Report:
-- [analysis/cipc_belief_r_lora_v1_report.md](/workspace/training/analysis/cipc_belief_r_lora_v1_report.md:1)
+- [analysis/cipc_belief_r_lora_v1_report.md](cipc_belief_r_lora_v1_report.md)
 
 ### Why the project moved to training
 
@@ -252,7 +252,7 @@ Interpretation:
 ### Two local frontier follow-ups
 
 Report:
-- [analysis/cipc_qwen05b_local_followup_report.md](/workspace/training/analysis/cipc_qwen05b_local_followup_report.md:1)
+- [analysis/cipc_qwen05b_local_followup_report.md](cipc_qwen05b_local_followup_report.md)
 
 Two targeted local follow-ups were then run.
 
@@ -322,7 +322,7 @@ The new scientific question became:
 ## 3.4 Phase D: Runpod Reproduction and Trade-Off Repair
 
 Report:
-- [analysis/cipc_qwen05b_runpod_phase_summary.md](/workspace/training/analysis/cipc_qwen05b_runpod_phase_summary.md:1)
+- [analysis/cipc_qwen05b_runpod_phase_summary.md](cipc_qwen05b_runpod_phase_summary.md)
 
 ### Why Runpod
 
@@ -434,7 +434,7 @@ The next redesign was to make the propagation loss more directly semantic.
 ### Conditional consistency v1
 
 Report:
-- [analysis/cipc_qwen05b_conditional_consistency_v1_report.md](/workspace/training/analysis/cipc_qwen05b_conditional_consistency_v1_report.md:1)
+- [analysis/cipc_qwen05b_conditional_consistency_v1_report.md](cipc_qwen05b_conditional_consistency_v1_report.md)
 
 Preserve:
 
@@ -460,7 +460,7 @@ Interpretation:
 ### Conditional consistency v2
 
 Report:
-- [analysis/cipc_qwen05b_conditional_consistency_v2_report.md](/workspace/training/analysis/cipc_qwen05b_conditional_consistency_v2_report.md:1)
+- [analysis/cipc_qwen05b_conditional_consistency_v2_report.md](cipc_qwen05b_conditional_consistency_v2_report.md)
 
 Change:
 
@@ -481,12 +481,12 @@ Interpretation:
 ## 4.4 Today’s Full Consistency Redesign Chain
 
 Session summary:
-- [analysis/2026-04-17_research_session_summary.md](/workspace/training/analysis/2026-04-17_research_session_summary.md:1)
+- [analysis/2026-04-17_research_session_summary.md](2026-04-17_research_session_summary.md)
 
 ### Step 1: Split Conditional Consistency
 
 Report:
-- [analysis/cipc_qwen05b_split_conditional_consistency_v1_report.md](/workspace/training/analysis/cipc_qwen05b_split_conditional_consistency_v1_report.md:1)
+- [analysis/cipc_qwen05b_split_conditional_consistency_v1_report.md](cipc_qwen05b_split_conditional_consistency_v1_report.md)
 
 #### Motivation
 
@@ -517,8 +517,8 @@ Preserve and replace were separated:
 ### Step 2: Pure Preserve Margin
 
 Reports:
-- [analysis/cipc_qwen05b_preserve_margin_conditional_consistency_v1_report.md](/workspace/training/analysis/cipc_qwen05b_preserve_margin_conditional_consistency_v1_report.md:1)
-- [analysis/cipc_qwen05b_preserve_margin_conditional_consistency_v2_report.md](/workspace/training/analysis/cipc_qwen05b_preserve_margin_conditional_consistency_v2_report.md:1)
+- [analysis/cipc_qwen05b_preserve_margin_conditional_consistency_v1_report.md](cipc_qwen05b_preserve_margin_conditional_consistency_v1_report.md)
+- [analysis/cipc_qwen05b_preserve_margin_conditional_consistency_v2_report.md](cipc_qwen05b_preserve_margin_conditional_consistency_v2_report.md)
 
 #### Motivation
 
@@ -561,8 +561,8 @@ Key lesson:
 ### Step 3: Preserve Hybrid Loss
 
 Reports:
-- [analysis/cipc_qwen05b_preserve_hybrid_conditional_consistency_v1_report.md](/workspace/training/analysis/cipc_qwen05b_preserve_hybrid_conditional_consistency_v1_report.md:1)
-- [analysis/cipc_qwen05b_preserve_hybrid_conditional_consistency_v2_report.md](/workspace/training/analysis/cipc_qwen05b_preserve_hybrid_conditional_consistency_v2_report.md:1)
+- [analysis/cipc_qwen05b_preserve_hybrid_conditional_consistency_v1_report.md](cipc_qwen05b_preserve_hybrid_conditional_consistency_v1_report.md)
+- [analysis/cipc_qwen05b_preserve_hybrid_conditional_consistency_v2_report.md](cipc_qwen05b_preserve_hybrid_conditional_consistency_v2_report.md)
 
 #### Motivation
 
@@ -709,8 +709,9 @@ In other words:
 
 If only a few files are shown to the advisor, the most useful set is:
 
-- [analysis/project_progress_report_for_advisor.md](/workspace/training/analysis/project_progress_report_for_advisor.md:1)
-- [analysis/2026-04-17_research_session_summary.md](/workspace/training/analysis/2026-04-17_research_session_summary.md:1)
-- [analysis/cipc_qwen05b_runpod_phase_summary.md](/workspace/training/analysis/cipc_qwen05b_runpod_phase_summary.md:1)
-- [analysis/cipc_qwen05b_preserve_margin_conditional_consistency_v1_report.md](/workspace/training/analysis/cipc_qwen05b_preserve_margin_conditional_consistency_v1_report.md:1)
-- [analysis/cipc_qwen05b_preserve_hybrid_conditional_consistency_v2_report.md](/workspace/training/analysis/cipc_qwen05b_preserve_hybrid_conditional_consistency_v2_report.md:1)
+- [analysis/project_progress_report_for_advisor.md](project_progress_report_for_advisor.md)
+- [analysis/2026-04-17_research_session_summary.md](2026-04-17_research_session_summary.md)
+- [analysis/cipc_qwen05b_runpod_phase_summary.md](cipc_qwen05b_runpod_phase_summary.md)
+- [analysis/cipc_qwen05b_preserve_margin_conditional_consistency_v1_report.md](cipc_qwen05b_preserve_margin_conditional_consistency_v1_report.md)
+- [analysis/cipc_qwen05b_preserve_hybrid_conditional_consistency_v2_report.md](cipc_qwen05b_preserve_hybrid_conditional_consistency_v2_report.md)
+- [PROJECT_MEMORY.md](../PROJECT_MEMORY.md)
