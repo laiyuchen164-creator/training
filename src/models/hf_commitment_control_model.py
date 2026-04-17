@@ -28,6 +28,7 @@ class HFCommitmentControlModel(nn.Module):
         model_name: str,
         control_label_count: int,
         answer_label_count: int,
+        control_to_idx: dict[str, int],
         lora_r: int = 8,
         lora_alpha: int = 16,
         lora_dropout: float = 0.05,
@@ -49,6 +50,7 @@ class HFCommitmentControlModel(nn.Module):
         )
         self.backbone = get_peft_model(self.backbone, peft_config)
         hidden_size = self.backbone.config.hidden_size
+        self.control_to_idx = control_to_idx
         self.control_head = nn.Linear(hidden_size, control_label_count)
         self.answer_head = nn.Linear(hidden_size, answer_label_count)
 
@@ -58,9 +60,11 @@ class HFCommitmentControlModel(nn.Module):
         attention_mask: torch.Tensor,
         control_labels: torch.Tensor | None = None,
         answer_labels: torch.Tensor | None = None,
+        early_answer_labels: torch.Tensor | None = None,
         control_class_weights: torch.Tensor | None = None,
         answer_class_weights: torch.Tensor | None = None,
         answer_loss_weight: float = 1.0,
+        consistency_loss_weight: float = 0.0,
     ) -> dict[str, torch.Tensor]:
         outputs = self.backbone(input_ids=input_ids, attention_mask=attention_mask)
         hidden_states = outputs.last_hidden_state
@@ -80,9 +84,22 @@ class HFCommitmentControlModel(nn.Module):
             ans_loss_fct = nn.CrossEntropyLoss(weight=answer_class_weights)
             ctrl_loss = ctrl_loss_fct(control_logits, control_labels)
             ans_loss = ans_loss_fct(answer_logits, answer_labels)
-            payload["loss"] = ctrl_loss + answer_loss_weight * ans_loss
+            total_loss = ctrl_loss + answer_loss_weight * ans_loss
+            consistency_loss = torch.zeros((), device=control_logits.device, dtype=control_logits.dtype)
+            if consistency_loss_weight > 0.0 and early_answer_labels is not None:
+                control_probs = torch.softmax(control_logits, dim=-1)
+                answer_probs = torch.softmax(answer_logits, dim=-1)
+                preserve_idx = self.control_to_idx["preserve"]
+                preserve_answer_prob = answer_probs.gather(
+                    dim=1,
+                    index=early_answer_labels.unsqueeze(1),
+                ).squeeze(1)
+                consistency_loss = torch.mean((preserve_answer_prob - control_probs[:, preserve_idx]) ** 2)
+                total_loss = total_loss + consistency_loss_weight * consistency_loss
+            payload["loss"] = total_loss
             payload["control_loss"] = ctrl_loss
             payload["answer_loss"] = ans_loss
+            payload["consistency_loss"] = consistency_loss
         return payload
 
     @classmethod
@@ -92,6 +109,7 @@ class HFCommitmentControlModel(nn.Module):
         model_name: str,
         control_label_count: int,
         answer_label_count: int,
+        control_to_idx: dict[str, int],
         lora_r: int,
         lora_alpha: int,
         lora_dropout: float,
@@ -104,6 +122,7 @@ class HFCommitmentControlModel(nn.Module):
             model_name=model_name,
             control_label_count=control_label_count,
             answer_label_count=answer_label_count,
+            control_to_idx=control_to_idx,
             lora_r=lora_r,
             lora_alpha=lora_alpha,
             lora_dropout=lora_dropout,

@@ -98,6 +98,7 @@ class CommitmentDataset(Dataset):
             "attention_mask": encoded["attention_mask"],
             "control_labels": self.control_to_idx[example["control_label"]],
             "answer_labels": self.answer_to_idx[example["final_answer_label"]],
+            "early_answer_labels": self.answer_to_idx[example["early_commitment_label"]],
         }
 
 
@@ -124,6 +125,7 @@ def collate_batch(batch: list[dict], tokenizer) -> dict:
         "attention_mask": padded["attention_mask"],
         "control_labels": torch.tensor([row["control_labels"] for row in batch], dtype=torch.long),
         "answer_labels": torch.tensor([row["answer_labels"] for row in batch], dtype=torch.long),
+        "early_answer_labels": torch.tensor([row["early_answer_labels"] for row in batch], dtype=torch.long),
     }
 
 
@@ -139,6 +141,29 @@ def aggregate_predictions_metrics(examples: list[dict], predictions: list[dict])
     return aggregate_condition_metrics(examples, aligned_predictions)
 
 
+def condition_metric_lookup(rows: list[dict], metric_key: str) -> dict[str, float]:
+    return {row["condition"]: row[metric_key] for row in rows}
+
+
+def selection_score(
+    selection_config: dict,
+    dev_metrics: dict,
+    dev_condition_rows: list[dict],
+) -> float:
+    strategy = selection_config.get("strategy", "overall_average")
+    if strategy == "overall_average":
+        return 0.5 * (
+            dev_metrics["control_decision_accuracy"] + dev_metrics["final_answer_accuracy"]
+        )
+    if strategy == "dev_answer_tradeoff_balance_v1":
+        by_condition = condition_metric_lookup(dev_condition_rows, "final_answer_accuracy")
+        return 0.5 * (
+            by_condition["incremental_no_overturn"]
+            + by_condition["incremental_overturn_reasoning"]
+        )
+    raise ValueError(f"Unknown selection strategy: {strategy}")
+
+
 def write_condition_csv(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
@@ -151,12 +176,18 @@ def build_weighted_sampler(
     examples: list[dict],
     *,
     label_key: str,
+    condition_multiplier_map: dict[str, float] | None = None,
 ) -> WeightedRandomSampler:
     counts: dict[str, int] = {}
     for example in examples:
         label = example[label_key]
         counts[label] = counts.get(label, 0) + 1
-    weights = [1.0 / counts[example[label_key]] for example in examples]
+    weights = []
+    for example in examples:
+        weight = 1.0 / counts[example[label_key]]
+        if condition_multiplier_map:
+            weight *= condition_multiplier_map.get(example["condition"], 1.0)
+        weights.append(weight)
     return WeightedRandomSampler(
         weights=torch.tensor(weights, dtype=torch.double),
         num_samples=len(examples),
@@ -194,6 +225,7 @@ def main() -> None:
         model_name=config["model"]["name"],
         control_label_count=len(control_labels),
         answer_label_count=len(answer_labels),
+        control_to_idx=control_to_idx,
         lora_r=config["model"]["lora_r"],
         lora_alpha=config["model"]["lora_alpha"],
         lora_dropout=config["model"]["lora_dropout"],
@@ -231,8 +263,14 @@ def main() -> None:
 
     collate = lambda batch: collate_batch(batch, tokenizer)
     train_sampler = None
+    sampler_config = config["training"].get("sampler", {})
+    condition_multiplier_map = sampler_config.get("condition_multiplier_map")
     if config["training"].get("oversample_control_labels", False):
-        train_sampler = build_weighted_sampler(train_examples, label_key="control_label")
+        train_sampler = build_weighted_sampler(
+            train_examples,
+            label_key="control_label",
+            condition_multiplier_map=condition_multiplier_map,
+        )
     train_loader = DataLoader(
         train_dataset,
         batch_size=config["training"]["train_batch_size"],
@@ -305,6 +343,7 @@ def main() -> None:
             attention_mask = batch["attention_mask"].to(device)
             control_labels_tensor = batch["control_labels"].to(device)
             answer_labels_tensor = batch["answer_labels"].to(device)
+            early_answer_labels_tensor = batch["early_answer_labels"].to(device)
 
             autocast_enabled = device.type == "cuda"
             autocast_dtype = torch.bfloat16 if config["model"].get("use_bf16", True) else torch.float16
@@ -314,9 +353,11 @@ def main() -> None:
                     attention_mask=attention_mask,
                     control_labels=control_labels_tensor,
                     answer_labels=answer_labels_tensor,
+                    early_answer_labels=early_answer_labels_tensor,
                     control_class_weights=control_class_weights,
                     answer_class_weights=answer_class_weights,
                     answer_loss_weight=config["training"]["answer_loss_weight"],
+                    consistency_loss_weight=config["training"].get("consistency_loss_weight", 0.0),
                 )
                 loss = outputs["loss"] / grad_accumulation
 
@@ -353,6 +394,7 @@ def main() -> None:
                         }
                     )
         dev_metrics = compute_predictions_metrics(dev_examples, dev_predictions)
+        dev_condition_rows = aggregate_predictions_metrics(dev_examples, dev_predictions)
         history.append(
             {
                 "epoch": epoch,
@@ -362,9 +404,7 @@ def main() -> None:
                 "dev_joint_accuracy": dev_metrics["joint_accuracy"],
             }
         )
-        score = 0.5 * (
-            dev_metrics["control_decision_accuracy"] + dev_metrics["final_answer_accuracy"]
-        )
+        score = selection_score(config.get("selection", {}), dev_metrics, dev_condition_rows)
         if score > best_score:
             best_score = score
             best_state = {
