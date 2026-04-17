@@ -40,6 +40,10 @@ def compute_conditional_propagation_loss(
     answer_labels: torch.Tensor,
     early_answer_labels: torch.Tensor,
     control_to_idx: dict[str, int],
+    lambda_pres: float,
+    lambda_rep: float,
+    beta_preserve_margin: float,
+    preserve_margin_m: float,
     beta_replace_margin: float,
     margin_m: float,
 ) -> dict[str, torch.Tensor]:
@@ -51,18 +55,31 @@ def compute_conditional_propagation_loss(
     preserve_mask = control_labels == preserve_idx
     replace_mask = control_labels == replace_idx if replace_idx is not None else torch.zeros_like(control_labels, dtype=torch.bool)
 
-    # Preserve-side propagation consistency: keep the final answer aligned with
-    # the early implied answer when the gold control decision is preserve.
+    # Preserve-side propagation consistency: combine direct CE-to-early
+    # supervision with a smaller margin term so preserve cases are anchored
+    # without relying on the margin alone.
     preserve_loss = zero
+    preserve_ce_loss = zero
+    preserve_margin_loss = zero
     if torch.any(preserve_mask):
         preserve_log_probs = log_answer_probs[preserve_mask]
-        preserve_targets = early_answer_labels[preserve_mask].unsqueeze(1)
-        preserve_loss = -preserve_log_probs.gather(dim=1, index=preserve_targets).squeeze(1).mean()
+        preserve_targets = early_answer_labels[preserve_mask]
+        preserve_target_log_probs = preserve_log_probs.gather(dim=1, index=preserve_targets.unsqueeze(1)).squeeze(1)
+        preserve_ce_loss = -preserve_target_log_probs.mean()
+        alternative_log_probs = preserve_log_probs.masked_fill(
+            F.one_hot(preserve_targets, num_classes=preserve_log_probs.size(1)).bool(),
+            float("-inf"),
+        )
+        strongest_alternative_log_probs = alternative_log_probs.max(dim=1).values
+        preserve_margin_gap = preserve_target_log_probs - strongest_alternative_log_probs
+        preserve_margin_loss = torch.relu(preserve_margin_m - preserve_margin_gap).mean()
+        preserve_loss = preserve_ce_loss + beta_preserve_margin * preserve_margin_loss
 
-    # Replace-side propagation consistency keeps replace examples tied to the
-    # updated gold answer while leaving weaken neutral.
+    # Replace-side propagation consistency: on replace examples, align the
+    # final answer with the updated gold answer while leaving weaken neutral.
     replace_alignment_loss = zero
     replace_margin_loss = zero
+    replace_loss = zero
     if torch.any(replace_mask):
         replace_log_probs = log_answer_probs[replace_mask]
         replace_targets = answer_labels[replace_mask].unsqueeze(1)
@@ -75,16 +92,17 @@ def compute_conditional_propagation_loss(
         # answer to outrank the early implied answer by at least margin_m.
         margin_gap = gold_log_probs - early_log_probs
         replace_margin_loss = torch.relu(margin_m - margin_gap).mean()
+        replace_loss = replace_alignment_loss + beta_replace_margin * replace_margin_loss
 
-    active_terms = []
-    if torch.any(preserve_mask):
-        active_terms.append(preserve_loss)
-    if torch.any(replace_mask):
-        active_terms.append(replace_alignment_loss + beta_replace_margin * replace_margin_loss)
-    propagation_loss = torch.stack(active_terms).mean() if active_terms else zero
+    # Keep preserve and replace in separate pools so replace-heavy batches do
+    # not dominate the propagation signal through pooled averaging.
+    propagation_loss = lambda_pres * preserve_loss + lambda_rep * replace_loss
     return {
         "propagation_loss": propagation_loss,
         "preserve_propagation_loss": preserve_loss,
+        "preserve_ce_loss": preserve_ce_loss,
+        "preserve_margin_loss": preserve_margin_loss,
+        "replace_propagation_loss": replace_loss,
         "replace_alignment_loss": replace_alignment_loss,
         "replace_margin_loss": replace_margin_loss,
     }
@@ -140,6 +158,10 @@ class HFCommitmentControlModel(nn.Module):
         answer_loss_weight: float = 1.0,
         consistency_loss_weight: float = 0.0,
         lambda_prop: float = 0.0,
+        lambda_pres: float = 0.0,
+        lambda_rep: float = 0.0,
+        beta_preserve_margin: float = 0.0,
+        preserve_margin_m: float = 0.0,
         beta_replace_margin: float = 0.0,
         margin_m: float = 0.0,
     ) -> dict[str, torch.Tensor]:
@@ -165,6 +187,9 @@ class HFCommitmentControlModel(nn.Module):
             consistency_loss = torch.zeros((), device=control_logits.device, dtype=control_logits.dtype)
             propagation_loss = torch.zeros((), device=control_logits.device, dtype=control_logits.dtype)
             preserve_propagation_loss = propagation_loss
+            preserve_ce_loss = propagation_loss
+            preserve_margin_loss = propagation_loss
+            replace_propagation_loss = propagation_loss
             replace_alignment_loss = propagation_loss
             replace_margin_loss = propagation_loss
             if consistency_loss_weight > 0.0 and early_answer_labels is not None:
@@ -177,27 +202,39 @@ class HFCommitmentControlModel(nn.Module):
                 ).squeeze(1)
                 consistency_loss = torch.mean((preserve_answer_prob - control_probs[:, preserve_idx]) ** 2)
                 total_loss = total_loss + consistency_loss_weight * consistency_loss
-            if lambda_prop > 0.0 and early_answer_labels is not None:
+            effective_lambda_pres = lambda_pres if lambda_pres > 0.0 else lambda_prop
+            effective_lambda_rep = lambda_rep if lambda_rep > 0.0 else lambda_prop
+            if (effective_lambda_pres > 0.0 or effective_lambda_rep > 0.0) and early_answer_labels is not None:
                 propagation_payload = compute_conditional_propagation_loss(
                     answer_logits=answer_logits,
                     control_labels=control_labels,
                     answer_labels=answer_labels,
                     early_answer_labels=early_answer_labels,
                     control_to_idx=self.control_to_idx,
+                    lambda_pres=effective_lambda_pres,
+                    lambda_rep=effective_lambda_rep,
+                    beta_preserve_margin=beta_preserve_margin,
+                    preserve_margin_m=preserve_margin_m,
                     beta_replace_margin=beta_replace_margin,
                     margin_m=margin_m,
                 )
                 propagation_loss = propagation_payload["propagation_loss"]
                 preserve_propagation_loss = propagation_payload["preserve_propagation_loss"]
+                preserve_ce_loss = propagation_payload["preserve_ce_loss"]
+                preserve_margin_loss = propagation_payload["preserve_margin_loss"]
+                replace_propagation_loss = propagation_payload["replace_propagation_loss"]
                 replace_alignment_loss = propagation_payload["replace_alignment_loss"]
                 replace_margin_loss = propagation_payload["replace_margin_loss"]
-                total_loss = total_loss + lambda_prop * propagation_loss
+                total_loss = total_loss + propagation_loss
             payload["loss"] = total_loss
             payload["control_loss"] = ctrl_loss
             payload["answer_loss"] = ans_loss
             payload["consistency_loss"] = consistency_loss
             payload["propagation_loss"] = propagation_loss
             payload["preserve_propagation_loss"] = preserve_propagation_loss
+            payload["preserve_ce_loss"] = preserve_ce_loss
+            payload["preserve_margin_loss"] = preserve_margin_loss
+            payload["replace_propagation_loss"] = replace_propagation_loss
             payload["replace_alignment_loss"] = replace_alignment_loss
             payload["replace_margin_loss"] = replace_margin_loss
         return payload

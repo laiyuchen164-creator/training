@@ -359,6 +359,10 @@ def main() -> None:
                     answer_loss_weight=config["training"]["answer_loss_weight"],
                     consistency_loss_weight=config["training"].get("consistency_loss_weight", 0.0),
                     lambda_prop=config["training"].get("lambda_prop", 0.0),
+                    lambda_pres=config["training"].get("lambda_pres", 0.0),
+                    lambda_rep=config["training"].get("lambda_rep", 0.0),
+                    beta_preserve_margin=config["training"].get("beta_preserve_margin", 0.0),
+                    preserve_margin_m=config["training"].get("preserve_margin_m", 0.0),
                     beta_replace_margin=config["training"].get("beta_replace_margin", 0.0),
                     margin_m=config["training"].get("margin_m", 0.0),
                 )

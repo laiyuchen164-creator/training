@@ -12,7 +12,7 @@ class HFConditionalPropagationLossTests(unittest.TestCase):
         answer_logits = torch.log(
             torch.tensor(
                 [
-                    [0.8, 0.1, 0.1],
+                    [0.8, 0.15, 0.05],
                     [0.7, 0.1, 0.2],
                 ],
                 dtype=torch.float32,
@@ -24,18 +24,28 @@ class HFConditionalPropagationLossTests(unittest.TestCase):
             answer_labels=torch.tensor([0, 2], dtype=torch.long),
             early_answer_labels=torch.tensor([0, 0], dtype=torch.long),
             control_to_idx={"preserve": 0, "weaken": 1, "replace": 2},
+            lambda_pres=0.2,
+            lambda_rep=0.08,
+            beta_preserve_margin=0.1,
+            preserve_margin_m=0.5,
             beta_replace_margin=0.2,
             margin_m=0.5,
         )
 
-        self.assertAlmostEqual(payload["preserve_propagation_loss"].item(), -torch.log(torch.tensor(0.8)).item(), places=5)
+        expected_preserve_ce = -torch.log(torch.tensor(0.8)).item()
+        expected_preserve_margin = max(0.0, 0.5 - (torch.log(torch.tensor(0.8)) - torch.log(torch.tensor(0.15))).item())
+        expected_preserve_total = expected_preserve_ce + 0.1 * expected_preserve_margin
+        self.assertAlmostEqual(payload["preserve_ce_loss"].item(), expected_preserve_ce, places=5)
+        self.assertAlmostEqual(payload["preserve_margin_loss"].item(), expected_preserve_margin, places=5)
+        self.assertAlmostEqual(payload["preserve_propagation_loss"].item(), expected_preserve_total, places=5)
         self.assertAlmostEqual(payload["replace_alignment_loss"].item(), -torch.log(torch.tensor(0.2)).item(), places=5)
 
         expected_margin = max(0.0, 0.5 - (torch.log(torch.tensor(0.2)) - torch.log(torch.tensor(0.7))).item())
         self.assertAlmostEqual(payload["replace_margin_loss"].item(), expected_margin, places=5)
 
         expected_replace_total = -torch.log(torch.tensor(0.2)).item() + 0.2 * expected_margin
-        expected_total = 0.5 * (-torch.log(torch.tensor(0.8)).item() + expected_replace_total)
+        self.assertAlmostEqual(payload["replace_propagation_loss"].item(), expected_replace_total, places=5)
+        expected_total = 0.2 * expected_preserve_total + 0.08 * expected_replace_total
         self.assertAlmostEqual(payload["propagation_loss"].item(), expected_total, places=5)
 
     def test_weaken_rows_stay_neutral(self) -> None:
@@ -45,12 +55,19 @@ class HFConditionalPropagationLossTests(unittest.TestCase):
             answer_labels=torch.tensor([2], dtype=torch.long),
             early_answer_labels=torch.tensor([0], dtype=torch.long),
             control_to_idx={"preserve": 0, "weaken": 1, "replace": 2},
+            lambda_pres=0.2,
+            lambda_rep=0.08,
+            beta_preserve_margin=0.1,
+            preserve_margin_m=0.5,
             beta_replace_margin=0.2,
             margin_m=0.5,
         )
 
         self.assertEqual(payload["propagation_loss"].item(), 0.0)
         self.assertEqual(payload["preserve_propagation_loss"].item(), 0.0)
+        self.assertEqual(payload["preserve_ce_loss"].item(), 0.0)
+        self.assertEqual(payload["preserve_margin_loss"].item(), 0.0)
+        self.assertEqual(payload["replace_propagation_loss"].item(), 0.0)
         self.assertEqual(payload["replace_alignment_loss"].item(), 0.0)
         self.assertEqual(payload["replace_margin_loss"].item(), 0.0)
 
