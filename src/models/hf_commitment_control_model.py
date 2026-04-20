@@ -167,6 +167,34 @@ def compute_gated_propagation_loss(
     }
 
 
+def compute_gold_gated_preserve_loss(
+    *,
+    answer_logits: torch.Tensor,
+    control_labels: torch.Tensor,
+    early_answer_labels: torch.Tensor,
+    control_to_idx: dict[str, int],
+    gold_preserve_lambda: float,
+) -> dict[str, torch.Tensor]:
+    preserve_idx = control_to_idx["preserve"]
+    preserve_mask = control_labels == preserve_idx
+    zero = torch.zeros((), device=answer_logits.device, dtype=answer_logits.dtype)
+    preserve_loss = zero
+    preserve_count = preserve_mask.sum().to(answer_logits.dtype)
+    if torch.any(preserve_mask):
+        log_answer_probs = F.log_softmax(answer_logits[preserve_mask], dim=-1)
+        preserve_targets = early_answer_labels[preserve_mask]
+        target_log_probs = log_answer_probs.gather(
+            dim=1,
+            index=preserve_targets.unsqueeze(1),
+        ).squeeze(1)
+        preserve_loss = -target_log_probs.mean()
+    return {
+        "gold_gated_preserve_loss": gold_preserve_lambda * preserve_loss,
+        "gold_gated_preserve_raw_loss": preserve_loss,
+        "gold_gated_preserve_count": preserve_count,
+    }
+
+
 class HFCommitmentControlModel(nn.Module):
     def __init__(
         self,
@@ -227,6 +255,7 @@ class HFCommitmentControlModel(nn.Module):
         gated_lambda_rep: float = 0.0,
         gated_beta_replace_margin: float = 0.0,
         gated_margin_m: float = 0.0,
+        gold_preserve_lambda: float = 0.0,
     ) -> dict[str, torch.Tensor]:
         outputs = self.backbone(input_ids=input_ids, attention_mask=attention_mask)
         hidden_states = outputs.last_hidden_state
@@ -261,6 +290,9 @@ class HFCommitmentControlModel(nn.Module):
             gated_replace_margin_loss = propagation_loss
             gated_preserve_gate_mean = propagation_loss
             gated_replace_gate_mean = propagation_loss
+            gold_gated_preserve_loss = propagation_loss
+            gold_gated_preserve_raw_loss = propagation_loss
+            gold_gated_preserve_count = propagation_loss
             if consistency_loss_weight > 0.0 and early_answer_labels is not None:
                 control_probs = torch.softmax(control_logits, dim=-1)
                 answer_probs = torch.softmax(answer_logits, dim=-1)
@@ -317,6 +349,18 @@ class HFCommitmentControlModel(nn.Module):
                 gated_preserve_gate_mean = gated_payload["gated_preserve_gate_mean"]
                 gated_replace_gate_mean = gated_payload["gated_replace_gate_mean"]
                 total_loss = total_loss + gated_propagation_loss
+            if gold_preserve_lambda > 0.0 and early_answer_labels is not None:
+                gold_preserve_payload = compute_gold_gated_preserve_loss(
+                    answer_logits=answer_logits,
+                    control_labels=control_labels,
+                    early_answer_labels=early_answer_labels,
+                    control_to_idx=self.control_to_idx,
+                    gold_preserve_lambda=gold_preserve_lambda,
+                )
+                gold_gated_preserve_loss = gold_preserve_payload["gold_gated_preserve_loss"]
+                gold_gated_preserve_raw_loss = gold_preserve_payload["gold_gated_preserve_raw_loss"]
+                gold_gated_preserve_count = gold_preserve_payload["gold_gated_preserve_count"]
+                total_loss = total_loss + gold_gated_preserve_loss
             payload["loss"] = total_loss
             payload["control_loss"] = ctrl_loss
             payload["answer_loss"] = ans_loss
@@ -334,6 +378,9 @@ class HFCommitmentControlModel(nn.Module):
             payload["gated_replace_margin_loss"] = gated_replace_margin_loss
             payload["gated_preserve_gate_mean"] = gated_preserve_gate_mean
             payload["gated_replace_gate_mean"] = gated_replace_gate_mean
+            payload["gold_gated_preserve_loss"] = gold_gated_preserve_loss
+            payload["gold_gated_preserve_raw_loss"] = gold_gated_preserve_raw_loss
+            payload["gold_gated_preserve_count"] = gold_gated_preserve_count
         return payload
 
     @classmethod
