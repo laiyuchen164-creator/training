@@ -365,6 +365,10 @@ def main() -> None:
                     preserve_margin_m=config["training"].get("preserve_margin_m", 0.0),
                     beta_replace_margin=config["training"].get("beta_replace_margin", 0.0),
                     margin_m=config["training"].get("margin_m", 0.0),
+                    gated_lambda_pres=config["training"].get("gated_lambda_pres", 0.0),
+                    gated_lambda_rep=config["training"].get("gated_lambda_rep", 0.0),
+                    gated_beta_replace_margin=config["training"].get("gated_beta_replace_margin", 0.0),
+                    gated_margin_m=config["training"].get("gated_margin_m", 0.0),
                 )
                 loss = outputs["loss"] / grad_accumulation
 

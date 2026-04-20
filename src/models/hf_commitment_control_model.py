@@ -108,6 +108,65 @@ def compute_conditional_propagation_loss(
     }
 
 
+def compute_gated_propagation_loss(
+    *,
+    control_logits: torch.Tensor,
+    answer_logits: torch.Tensor,
+    answer_labels: torch.Tensor,
+    early_answer_labels: torch.Tensor,
+    control_to_idx: dict[str, int],
+    gated_lambda_pres: float,
+    gated_lambda_rep: float,
+    gated_beta_replace_margin: float,
+    gated_margin_m: float,
+) -> dict[str, torch.Tensor]:
+    log_answer_probs = F.log_softmax(answer_logits, dim=-1)
+    control_probs = torch.softmax(control_logits.detach(), dim=-1)
+    preserve_idx = control_to_idx["preserve"]
+    replace_idx = control_to_idx.get("replace")
+    preserve_gate = control_probs[:, preserve_idx]
+    replace_gate = (
+        control_probs[:, replace_idx]
+        if replace_idx is not None
+        else torch.zeros_like(preserve_gate)
+    )
+
+    early_log_probs = log_answer_probs.gather(
+        dim=1,
+        index=early_answer_labels.unsqueeze(1),
+    ).squeeze(1)
+    gold_log_probs = log_answer_probs.gather(
+        dim=1,
+        index=answer_labels.unsqueeze(1),
+    ).squeeze(1)
+
+    preserve_loss = -(preserve_gate * early_log_probs).mean()
+    replace_alignment_loss = -(replace_gate * gold_log_probs).mean()
+    replace_margin_loss = torch.zeros(
+        (),
+        device=answer_logits.device,
+        dtype=answer_logits.dtype,
+    )
+    if gated_beta_replace_margin > 0.0:
+        margin_gap = gold_log_probs - early_log_probs
+        replace_margin_loss = (
+            replace_gate * torch.relu(gated_margin_m - margin_gap)
+        ).mean()
+    gated_loss = (
+        gated_lambda_pres * preserve_loss
+        + gated_lambda_rep * replace_alignment_loss
+        + gated_lambda_rep * gated_beta_replace_margin * replace_margin_loss
+    )
+    return {
+        "gated_propagation_loss": gated_loss,
+        "gated_preserve_loss": preserve_loss,
+        "gated_replace_loss": replace_alignment_loss,
+        "gated_replace_margin_loss": replace_margin_loss,
+        "gated_preserve_gate_mean": preserve_gate.mean(),
+        "gated_replace_gate_mean": replace_gate.mean(),
+    }
+
+
 class HFCommitmentControlModel(nn.Module):
     def __init__(
         self,
@@ -164,6 +223,10 @@ class HFCommitmentControlModel(nn.Module):
         preserve_margin_m: float = 0.0,
         beta_replace_margin: float = 0.0,
         margin_m: float = 0.0,
+        gated_lambda_pres: float = 0.0,
+        gated_lambda_rep: float = 0.0,
+        gated_beta_replace_margin: float = 0.0,
+        gated_margin_m: float = 0.0,
     ) -> dict[str, torch.Tensor]:
         outputs = self.backbone(input_ids=input_ids, attention_mask=attention_mask)
         hidden_states = outputs.last_hidden_state
@@ -192,6 +255,12 @@ class HFCommitmentControlModel(nn.Module):
             replace_propagation_loss = propagation_loss
             replace_alignment_loss = propagation_loss
             replace_margin_loss = propagation_loss
+            gated_propagation_loss = propagation_loss
+            gated_preserve_loss = propagation_loss
+            gated_replace_loss = propagation_loss
+            gated_replace_margin_loss = propagation_loss
+            gated_preserve_gate_mean = propagation_loss
+            gated_replace_gate_mean = propagation_loss
             if consistency_loss_weight > 0.0 and early_answer_labels is not None:
                 control_probs = torch.softmax(control_logits, dim=-1)
                 answer_probs = torch.softmax(answer_logits, dim=-1)
@@ -226,6 +295,28 @@ class HFCommitmentControlModel(nn.Module):
                 replace_alignment_loss = propagation_payload["replace_alignment_loss"]
                 replace_margin_loss = propagation_payload["replace_margin_loss"]
                 total_loss = total_loss + propagation_loss
+            if (
+                (gated_lambda_pres > 0.0 or gated_lambda_rep > 0.0)
+                and early_answer_labels is not None
+            ):
+                gated_payload = compute_gated_propagation_loss(
+                    control_logits=control_logits,
+                    answer_logits=answer_logits,
+                    answer_labels=answer_labels,
+                    early_answer_labels=early_answer_labels,
+                    control_to_idx=self.control_to_idx,
+                    gated_lambda_pres=gated_lambda_pres,
+                    gated_lambda_rep=gated_lambda_rep,
+                    gated_beta_replace_margin=gated_beta_replace_margin,
+                    gated_margin_m=gated_margin_m,
+                )
+                gated_propagation_loss = gated_payload["gated_propagation_loss"]
+                gated_preserve_loss = gated_payload["gated_preserve_loss"]
+                gated_replace_loss = gated_payload["gated_replace_loss"]
+                gated_replace_margin_loss = gated_payload["gated_replace_margin_loss"]
+                gated_preserve_gate_mean = gated_payload["gated_preserve_gate_mean"]
+                gated_replace_gate_mean = gated_payload["gated_replace_gate_mean"]
+                total_loss = total_loss + gated_propagation_loss
             payload["loss"] = total_loss
             payload["control_loss"] = ctrl_loss
             payload["answer_loss"] = ans_loss
@@ -237,6 +328,12 @@ class HFCommitmentControlModel(nn.Module):
             payload["replace_propagation_loss"] = replace_propagation_loss
             payload["replace_alignment_loss"] = replace_alignment_loss
             payload["replace_margin_loss"] = replace_margin_loss
+            payload["gated_propagation_loss"] = gated_propagation_loss
+            payload["gated_preserve_loss"] = gated_preserve_loss
+            payload["gated_replace_loss"] = gated_replace_loss
+            payload["gated_replace_margin_loss"] = gated_replace_margin_loss
+            payload["gated_preserve_gate_mean"] = gated_preserve_gate_mean
+            payload["gated_replace_gate_mean"] = gated_replace_gate_mean
         return payload
 
     @classmethod
