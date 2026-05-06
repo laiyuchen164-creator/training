@@ -108,6 +108,225 @@ def compute_conditional_propagation_loss(
     }
 
 
+def compute_boundary_propagation_loss(
+    *,
+    answer_logits: torch.Tensor,
+    control_labels: torch.Tensor,
+    answer_labels: torch.Tensor,
+    early_answer_labels: torch.Tensor,
+    control_to_idx: dict[str, int],
+    lambda_pres: float,
+    lambda_rep: float,
+    beta_pres: float,
+    beta_rep: float,
+    m_pres: float,
+    m_rep: float,
+) -> dict[str, torch.Tensor]:
+    log_answer_probs = F.log_softmax(answer_logits, dim=-1)
+    zero = torch.zeros((), device=answer_logits.device, dtype=answer_logits.dtype)
+
+    preserve_idx = control_to_idx["preserve"]
+    replace_idx = control_to_idx.get("replace")
+    preserve_mask = control_labels == preserve_idx
+    replace_mask = replace_idx is not None and control_labels == replace_idx
+    if isinstance(replace_mask, bool):
+        replace_mask = torch.zeros_like(control_labels, dtype=torch.bool)
+
+    preserve_loss = zero
+    preserve_ce_loss = zero
+    preserve_margin_loss = zero
+    if torch.any(preserve_mask):
+        preserve_log_probs = log_answer_probs[preserve_mask]
+        preserve_targets = early_answer_labels[preserve_mask]
+        s_early = preserve_log_probs.gather(
+            dim=1,
+            index=preserve_targets.unsqueeze(1),
+        ).squeeze(1)
+        preserve_ce_loss = -s_early.mean()
+        non_early_log_probs = preserve_log_probs.masked_fill(
+            F.one_hot(preserve_targets, num_classes=preserve_log_probs.size(1)).bool(),
+            float("-inf"),
+        )
+        max_non_early_score = non_early_log_probs.max(dim=1).values
+        preserve_gap = s_early - max_non_early_score
+        preserve_margin_loss = torch.relu(m_pres - preserve_gap).mean()
+        preserve_loss = preserve_ce_loss + beta_pres * preserve_margin_loss
+
+    replace_loss = zero
+    replace_ce_loss = zero
+    replace_margin_loss = zero
+    if torch.any(replace_mask):
+        replace_log_probs = log_answer_probs[replace_mask]
+        replace_targets = answer_labels[replace_mask]
+        early_targets = early_answer_labels[replace_mask]
+        s_gold = replace_log_probs.gather(
+            dim=1,
+            index=replace_targets.unsqueeze(1),
+        ).squeeze(1)
+        s_early = replace_log_probs.gather(
+            dim=1,
+            index=early_targets.unsqueeze(1),
+        ).squeeze(1)
+        replace_ce_loss = -s_gold.mean()
+        replace_gap = s_gold - s_early
+        replace_margin_loss = torch.relu(m_rep - replace_gap).mean()
+        replace_loss = replace_ce_loss + beta_rep * replace_margin_loss
+
+    propagation_loss = lambda_pres * preserve_loss + lambda_rep * replace_loss
+    return {
+        "propagation_loss": propagation_loss,
+        "preserve_propagation_loss": preserve_loss,
+        "preserve_ce_loss": preserve_ce_loss,
+        "preserve_margin_loss": preserve_margin_loss,
+        "replace_propagation_loss": replace_loss,
+        "replace_alignment_loss": replace_ce_loss,
+        "replace_margin_loss": replace_margin_loss,
+    }
+
+
+def compute_boundary_propagation_loss_replace_margin_stopgrad_early(
+    *,
+    answer_logits: torch.Tensor,
+    control_labels: torch.Tensor,
+    answer_labels: torch.Tensor,
+    early_answer_labels: torch.Tensor,
+    control_to_idx: dict[str, int],
+    lambda_pres: float,
+    lambda_rep: float,
+    beta_pres: float,
+    beta_rep: float,
+    m_pres: float,
+    m_rep: float,
+) -> dict[str, torch.Tensor]:
+    log_answer_probs = F.log_softmax(answer_logits, dim=-1)
+    zero = torch.zeros((), device=answer_logits.device, dtype=answer_logits.dtype)
+
+    preserve_idx = control_to_idx["preserve"]
+    replace_idx = control_to_idx.get("replace")
+    preserve_mask = control_labels == preserve_idx
+    replace_mask = replace_idx is not None and control_labels == replace_idx
+    if isinstance(replace_mask, bool):
+        replace_mask = torch.zeros_like(control_labels, dtype=torch.bool)
+
+    preserve_loss = zero
+    preserve_ce_loss = zero
+    preserve_margin_loss = zero
+    if torch.any(preserve_mask):
+        preserve_log_probs = log_answer_probs[preserve_mask]
+        preserve_targets = early_answer_labels[preserve_mask]
+        s_early = preserve_log_probs.gather(
+            dim=1,
+            index=preserve_targets.unsqueeze(1),
+        ).squeeze(1)
+        preserve_ce_loss = -s_early.mean()
+        non_early_log_probs = preserve_log_probs.masked_fill(
+            F.one_hot(preserve_targets, num_classes=preserve_log_probs.size(1)).bool(),
+            float("-inf"),
+        )
+        max_non_early_score = non_early_log_probs.max(dim=1).values
+        preserve_gap = s_early - max_non_early_score
+        preserve_margin_loss = torch.relu(m_pres - preserve_gap).mean()
+        preserve_loss = preserve_ce_loss + beta_pres * preserve_margin_loss
+
+    replace_loss = zero
+    replace_ce_loss = zero
+    replace_margin_loss = zero
+    if torch.any(replace_mask):
+        replace_log_probs = log_answer_probs[replace_mask]
+        replace_targets = answer_labels[replace_mask]
+        early_targets = early_answer_labels[replace_mask]
+        s_gold = replace_log_probs.gather(
+            dim=1,
+            index=replace_targets.unsqueeze(1),
+        ).squeeze(1)
+        s_early = replace_log_probs.gather(
+            dim=1,
+            index=early_targets.unsqueeze(1),
+        ).squeeze(1)
+        replace_ce_loss = -s_gold.mean()
+        replace_gap = s_gold - s_early.detach()
+        replace_margin_loss = torch.relu(m_rep - replace_gap).mean()
+        replace_loss = replace_ce_loss + beta_rep * replace_margin_loss
+
+    propagation_loss = lambda_pres * preserve_loss + lambda_rep * replace_loss
+    return {
+        "propagation_loss": propagation_loss,
+        "preserve_propagation_loss": preserve_loss,
+        "preserve_ce_loss": preserve_ce_loss,
+        "preserve_margin_loss": preserve_margin_loss,
+        "replace_propagation_loss": replace_loss,
+        "replace_alignment_loss": replace_ce_loss,
+        "replace_margin_loss": replace_margin_loss,
+    }
+
+
+def compute_conditionally_masked_answer_loss(
+    *,
+    answer_logits: torch.Tensor,
+    control_labels: torch.Tensor,
+    answer_labels: torch.Tensor,
+    early_answer_labels: torch.Tensor,
+    control_to_idx: dict[str, int],
+    answer_class_weights: torch.Tensor | None = None,
+) -> dict[str, torch.Tensor]:
+    per_example_loss = F.cross_entropy(
+        answer_logits,
+        answer_labels,
+        weight=answer_class_weights,
+        reduction="none",
+    )
+    preserve_idx = control_to_idx["preserve"]
+    replace_idx = control_to_idx.get("replace")
+    weaken_idx = control_to_idx.get("weaken")
+
+    zero = torch.zeros((), device=answer_logits.device, dtype=answer_logits.dtype)
+    group_losses: list[torch.Tensor] = []
+
+    preserve_loss = zero
+    preserve_mask = control_labels == preserve_idx
+    if torch.any(preserve_mask):
+        preserve_targets = early_answer_labels[preserve_mask]
+        preserve_logits = answer_logits[preserve_mask]
+        preserve_weights = (
+            answer_class_weights
+            if answer_class_weights is None
+            else answer_class_weights.to(answer_logits.device)
+        )
+        preserve_loss = F.cross_entropy(
+            preserve_logits,
+            preserve_targets,
+            weight=preserve_weights,
+            reduction="mean",
+        )
+        group_losses.append(preserve_loss)
+
+    replace_loss = zero
+    if replace_idx is not None:
+        replace_mask = control_labels == replace_idx
+        if torch.any(replace_mask):
+            replace_loss = per_example_loss[replace_mask].mean()
+            group_losses.append(replace_loss)
+
+    weaken_loss = zero
+    if weaken_idx is not None:
+        weaken_mask = control_labels == weaken_idx
+        if torch.any(weaken_mask):
+            weaken_loss = per_example_loss[weaken_mask].mean()
+            group_losses.append(weaken_loss)
+
+    if group_losses:
+        answer_loss = torch.stack(group_losses).mean()
+    else:
+        answer_loss = zero
+
+    return {
+        "answer_loss": answer_loss,
+        "answer_loss_preserve": preserve_loss,
+        "answer_loss_replace": replace_loss,
+        "answer_loss_weaken": weaken_loss,
+    }
+
+
 def compute_gated_propagation_loss(
     *,
     control_logits: torch.Tensor,
@@ -242,8 +461,10 @@ class HFCommitmentControlModel(nn.Module):
         early_answer_labels: torch.Tensor | None = None,
         control_class_weights: torch.Tensor | None = None,
         answer_class_weights: torch.Tensor | None = None,
+        answer_loss_variant: str = "global_gold_ce",
         answer_loss_weight: float = 1.0,
         consistency_loss_weight: float = 0.0,
+        propagation_variant: str = "legacy_conditional",
         lambda_prop: float = 0.0,
         lambda_pres: float = 0.0,
         lambda_rep: float = 0.0,
@@ -251,6 +472,10 @@ class HFCommitmentControlModel(nn.Module):
         preserve_margin_m: float = 0.0,
         beta_replace_margin: float = 0.0,
         margin_m: float = 0.0,
+        beta_pres: float = 0.0,
+        beta_rep: float = 0.0,
+        m_pres: float = 0.0,
+        m_rep: float = 0.0,
         gated_lambda_pres: float = 0.0,
         gated_lambda_rep: float = 0.0,
         gated_beta_replace_margin: float = 0.0,
@@ -272,9 +497,26 @@ class HFCommitmentControlModel(nn.Module):
         }
         if control_labels is not None and answer_labels is not None:
             ctrl_loss_fct = nn.CrossEntropyLoss(weight=control_class_weights)
-            ans_loss_fct = nn.CrossEntropyLoss(weight=answer_class_weights)
             ctrl_loss = ctrl_loss_fct(control_logits, control_labels)
-            ans_loss = ans_loss_fct(answer_logits, answer_labels)
+            answer_loss_preserve = torch.zeros((), device=control_logits.device, dtype=control_logits.dtype)
+            answer_loss_replace = answer_loss_preserve
+            answer_loss_weaken = answer_loss_preserve
+            if answer_loss_variant == "conditional_masked_v1" and early_answer_labels is not None:
+                answer_loss_payload = compute_conditionally_masked_answer_loss(
+                    answer_logits=answer_logits,
+                    control_labels=control_labels,
+                    answer_labels=answer_labels,
+                    early_answer_labels=early_answer_labels,
+                    control_to_idx=self.control_to_idx,
+                    answer_class_weights=answer_class_weights,
+                )
+                ans_loss = answer_loss_payload["answer_loss"]
+                answer_loss_preserve = answer_loss_payload["answer_loss_preserve"]
+                answer_loss_replace = answer_loss_payload["answer_loss_replace"]
+                answer_loss_weaken = answer_loss_payload["answer_loss_weaken"]
+            else:
+                ans_loss_fct = nn.CrossEntropyLoss(weight=answer_class_weights)
+                ans_loss = ans_loss_fct(answer_logits, answer_labels)
             total_loss = ctrl_loss + answer_loss_weight * ans_loss
             consistency_loss = torch.zeros((), device=control_logits.device, dtype=control_logits.dtype)
             propagation_loss = torch.zeros((), device=control_logits.device, dtype=control_logits.dtype)
@@ -306,19 +548,48 @@ class HFCommitmentControlModel(nn.Module):
             effective_lambda_pres = lambda_pres if lambda_pres > 0.0 else lambda_prop
             effective_lambda_rep = lambda_rep if lambda_rep > 0.0 else lambda_prop
             if (effective_lambda_pres > 0.0 or effective_lambda_rep > 0.0) and early_answer_labels is not None:
-                propagation_payload = compute_conditional_propagation_loss(
-                    answer_logits=answer_logits,
-                    control_labels=control_labels,
-                    answer_labels=answer_labels,
-                    early_answer_labels=early_answer_labels,
-                    control_to_idx=self.control_to_idx,
-                    lambda_pres=effective_lambda_pres,
-                    lambda_rep=effective_lambda_rep,
-                    beta_preserve_margin=beta_preserve_margin,
-                    preserve_margin_m=preserve_margin_m,
-                    beta_replace_margin=beta_replace_margin,
-                    margin_m=margin_m,
-                )
+                if propagation_variant == "boundary_objective_v1":
+                    propagation_payload = compute_boundary_propagation_loss(
+                        answer_logits=answer_logits,
+                        control_labels=control_labels,
+                        answer_labels=answer_labels,
+                        early_answer_labels=early_answer_labels,
+                        control_to_idx=self.control_to_idx,
+                        lambda_pres=effective_lambda_pres,
+                        lambda_rep=effective_lambda_rep,
+                        beta_pres=beta_pres,
+                        beta_rep=beta_rep,
+                        m_pres=m_pres,
+                        m_rep=m_rep,
+                    )
+                elif propagation_variant == "boundary_objective_v5_replace_margin_stopgrad_early_v1":
+                    propagation_payload = compute_boundary_propagation_loss_replace_margin_stopgrad_early(
+                        answer_logits=answer_logits,
+                        control_labels=control_labels,
+                        answer_labels=answer_labels,
+                        early_answer_labels=early_answer_labels,
+                        control_to_idx=self.control_to_idx,
+                        lambda_pres=effective_lambda_pres,
+                        lambda_rep=effective_lambda_rep,
+                        beta_pres=beta_pres,
+                        beta_rep=beta_rep,
+                        m_pres=m_pres,
+                        m_rep=m_rep,
+                    )
+                else:
+                    propagation_payload = compute_conditional_propagation_loss(
+                        answer_logits=answer_logits,
+                        control_labels=control_labels,
+                        answer_labels=answer_labels,
+                        early_answer_labels=early_answer_labels,
+                        control_to_idx=self.control_to_idx,
+                        lambda_pres=effective_lambda_pres,
+                        lambda_rep=effective_lambda_rep,
+                        beta_preserve_margin=beta_preserve_margin,
+                        preserve_margin_m=preserve_margin_m,
+                        beta_replace_margin=beta_replace_margin,
+                        margin_m=margin_m,
+                    )
                 propagation_loss = propagation_payload["propagation_loss"]
                 preserve_propagation_loss = propagation_payload["preserve_propagation_loss"]
                 preserve_ce_loss = propagation_payload["preserve_ce_loss"]
@@ -364,6 +635,9 @@ class HFCommitmentControlModel(nn.Module):
             payload["loss"] = total_loss
             payload["control_loss"] = ctrl_loss
             payload["answer_loss"] = ans_loss
+            payload["answer_loss_preserve"] = answer_loss_preserve
+            payload["answer_loss_replace"] = answer_loss_replace
+            payload["answer_loss_weaken"] = answer_loss_weaken
             payload["consistency_loss"] = consistency_loss
             payload["propagation_loss"] = propagation_loss
             payload["preserve_propagation_loss"] = preserve_propagation_loss
